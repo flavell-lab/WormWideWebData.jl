@@ -49,27 +49,33 @@ function generate_encoding_files(
     #     metadata=Dict("blake3_relative_encoding_strength"=>blake3_relative_encoding_strength))
 
     # relative encoding strengths median
-    relative_encoding_strength_median = Dict{String,Any}()
-    for (uid, rel_enc_str) in relative_encoding_strength
-        relative_encoding_strength_median[uid] = Dict()
+    relative_encoding_strength_median = Dict{String,Dict{String,Matrix{Float64}}}()
+    for (uid, uid_enc_strength) in relative_encoding_strength
+        # 1. identify dimensions and keys safely
+        range_keys = keys(uid_enc_strength)
+        n_range = length(range_keys)
 
-        for (i_rg, rg_rel_enc_str) in rel_enc_str
-            n_neuron = maximum(keys(rg_rel_enc_str))
+        # pre_allocate
+        first_rg = first(values(uid_enc_strength))
+        first_neuron = first(values(first_rg))
+        feature_keys = keys(first_neuron)
 
-            dict_stats = Dict()
-            for k in keys(rg_rel_enc_str[1])
-                dict_stats[k] = zeros(Float64, n_neuron)
-            end
+        n_neuron = maximum(keys(first_rg))
 
-            for idx_neuron = 1:n_neuron
-                neuron_rel_enc_str = rg_rel_enc_str[idx_neuron]
-                for (b, b_rel_enc_str) in neuron_rel_enc_str
-                    dict_stats[b][idx_neuron] = median(b_rel_enc_str)
+        dict_dataset = Dict{String,Matrix{Float64}}(
+            k => zeros(Float64, n_neuron, n_range) for k in feature_keys
+        )
+
+        # compute median
+        for (i_rg, rg_enc_strength) in uid_enc_strength
+            for (idx_neuron, neuron_features) in rg_enc_strength
+                for (k, enc_vec) in neuron_features
+                    dict_dataset[k][idx_neuron, i_rg] = median(enc_vec)
                 end
             end
-
-            relative_encoding_strength_median[uid][i_rg] = dict_stats
         end
+
+        relative_encoding_strength_median[uid] = dict_dataset
     end
     save_dict_to_h5_json(
         path_dir_target,
@@ -127,31 +133,46 @@ function get_encoding_dictionary(
     tuning_strength,
     sampled_tau_vals_median,
     fit_ranges,
-    relative_encoding_strength_median
+    relative_encoding_strength_median,
 )
     n_neuron = size(sampled_tau_vals_median, 2)
-    
+
     output_ = Dict()
 
     output_["ranges"] = fit_ranges
     output_["neuron_categorization"] = neuron_categorization
     output_["tau_vals"] = zeros(n_neuron) # time constants
-    
+
     output_["forwardness"] = zeros(n_neuron)
     output_["dorsalness"] = zeros(n_neuron)
     output_["feedingness"] = zeros(n_neuron)
-    
+
     output_["rel_enc_str_v"] = zeros(n_neuron) # relative encoding strength
     output_["rel_enc_str_θh"] = zeros(n_neuron)
     output_["rel_enc_str_P"] = zeros(n_neuron)
 
-    rel_enc_str_v = vec(median(hcat([meds["v"] for (i_rg_str, meds) in relative_encoding_strength_median]...), dims=2))
-    rel_enc_str_θh = vec(median(hcat([meds["θh"] for (i_rg_str, meds) in relative_encoding_strength_median]...), dims=2))
-    rel_enc_str_P = vec(median(hcat([meds["P"] for (i_rg_str, meds) in relative_encoding_strength_median]...), dims=2))
-    
-    for idx_neuron in 1:n_neuron
+    rel_enc_str_v = vec(
+        median(
+            hcat([meds["v"] for (i_rg_str, meds) in relative_encoding_strength_median]...),
+            dims = 2,
+        ),
+    )
+    rel_enc_str_θh = vec(
+        median(
+            hcat([meds["θh"] for (i_rg_str, meds) in relative_encoding_strength_median]...),
+            dims = 2,
+        ),
+    )
+    rel_enc_str_P = vec(
+        median(
+            hcat([meds["P"] for (i_rg_str, meds) in relative_encoding_strength_median]...),
+            dims = 2,
+        ),
+    )
+
+    for idx_neuron = 1:n_neuron
         idx_neuron_str = string(idx_neuron)
-        
+
         ranges_encoding = Int[]
         ranges_encoding_v = Int[]
         ranges_encoding_θh = Int[]
@@ -159,7 +180,7 @@ function get_encoding_dictionary(
 
         for (i_rg, enc_rg) in neuron_categorization
             i_rg = i_rg isa String ? parse(Int, i_rg) : i_rg
-            
+
             if idx_neuron in enc_rg["all"]
                 push!(ranges_encoding, i_rg)
             end
@@ -167,40 +188,46 @@ function get_encoding_dictionary(
             enc_v = enc_rg["v"]
             enc_θh = enc_rg["θh"]
             enc_P = enc_rg["P"]
-            
-            if idx_neuron in enc_v["fwd"] || idx_neuron in enc_v["rev"] 
+
+            if idx_neuron in enc_v["fwd"] || idx_neuron in enc_v["rev"]
                 push!(ranges_encoding_v, i_rg)
             end
-            if idx_neuron in enc_θh["dorsal"] || idx_neuron in enc_θh["ventral"] 
+            if idx_neuron in enc_θh["dorsal"] || idx_neuron in enc_θh["ventral"]
                 push!(ranges_encoding_θh, i_rg)
             end
-            if idx_neuron in enc_P["act"] || idx_neuron in enc_P["inh"] 
+            if idx_neuron in enc_P["act"] || idx_neuron in enc_P["inh"]
                 push!(ranges_encoding_P, i_rg)
             end
         end
 
         # compute encoding strengths and forwardness/dorsalness/feedingness only using the encoding time segments/ranges
         if !isempty(ranges_encoding)
-            output_["tau_vals"][idx_neuron] = median(sampled_tau_vals_median[ranges_encoding,idx_neuron])
+            output_["tau_vals"][idx_neuron] =
+                median(sampled_tau_vals_median[ranges_encoding, idx_neuron])
             output_["rel_enc_str_v"][idx_neuron] = rel_enc_str_v[idx_neuron]
             output_["rel_enc_str_θh"][idx_neuron] = rel_enc_str_θh[idx_neuron]
             output_["rel_enc_str_P"][idx_neuron] = rel_enc_str_P[idx_neuron]
         end
 
         if !isempty(ranges_encoding_v)
-            output_["forwardness"][idx_neuron] = median([enc[idx_neuron_str]["v_fwd"] for enc in values(tuning_strength)])
+            output_["forwardness"][idx_neuron] =
+                median([enc[idx_neuron_str]["v_fwd"] for enc in values(tuning_strength)])
         end
         if !isempty(ranges_encoding_θh)
-            output_["dorsalness"][idx_neuron] = median([enc[idx_neuron_str]["θh_dorsal"] for enc in values(tuning_strength)])
+            output_["dorsalness"][idx_neuron] = median([
+                enc[idx_neuron_str]["θh_dorsal"] for enc in values(tuning_strength)
+            ])
         end
         if !isempty(ranges_encoding_P)
-            output_["feedingness"][idx_neuron] = median([enc[idx_neuron_str]["P_pos"] for enc in values(tuning_strength)])
+            output_["feedingness"][idx_neuron] =
+                median([enc[idx_neuron_str]["P_pos"] for enc in values(tuning_strength)])
         end
     end
 
     # if more than 1 segments, collate encoding changing neurons
-    output_["encoding_changing_neurons"] = length(output_["ranges"]) > 1 ?
+    output_["encoding_changing_neurons"] =
+        length(output_["ranges"]) > 1 ?
         unique(vcat([enc["all"] for (rg, enc) in encoding_changes_corrected]...)) : []
-    
+
     output_
 end
