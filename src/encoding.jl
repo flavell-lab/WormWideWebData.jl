@@ -126,6 +126,20 @@ function generate_encoding_files(
     nothing
 end
 
+function _get_median_tuning_strength(
+    ranges_encoding::Vector{Int},
+    idx_neuron::Int,
+    key::AbstractString,
+    tuning_strength::Dict,
+)
+    ranges_encoding_str = string.(ranges_encoding)
+    idx_neuron_str = string(idx_neuron)
+
+    median(
+        strength[idx_neuron_str][key] for
+        (i_rg_str, strength) in tuning_strength if i_rg_str in ranges_encoding_str
+    )
+end
 
 function get_encoding_dictionary(
     neuron_categorization,
@@ -151,24 +165,9 @@ function get_encoding_dictionary(
     output_["rel_enc_str_θh"] = zeros(n_neuron)
     output_["rel_enc_str_P"] = zeros(n_neuron)
 
-    rel_enc_str_v = vec(
-        median(
-            hcat([meds["v"] for (i_rg_str, meds) in relative_encoding_strength_median]...),
-            dims = 2,
-        ),
-    )
-    rel_enc_str_θh = vec(
-        median(
-            hcat([meds["θh"] for (i_rg_str, meds) in relative_encoding_strength_median]...),
-            dims = 2,
-        ),
-    )
-    rel_enc_str_P = vec(
-        median(
-            hcat([meds["P"] for (i_rg_str, meds) in relative_encoding_strength_median]...),
-            dims = 2,
-        ),
-    )
+    rel_enc_str_v = relative_encoding_strength_median["v"]
+    rel_enc_str_θh = relative_encoding_strength_median["θh"]
+    rel_enc_str_P = relative_encoding_strength_median["P"]
 
     for idx_neuron = 1:n_neuron
         idx_neuron_str = string(idx_neuron)
@@ -178,6 +177,7 @@ function get_encoding_dictionary(
         ranges_encoding_θh = Int[]
         ranges_encoding_P = Int[]
 
+        # encoding categorization
         for (i_rg, enc_rg) in neuron_categorization
             i_rg = i_rg isa String ? parse(Int, i_rg) : i_rg
 
@@ -204,29 +204,43 @@ function get_encoding_dictionary(
         if !isempty(ranges_encoding)
             output_["tau_vals"][idx_neuron] =
                 median(sampled_tau_vals_median[ranges_encoding, idx_neuron])
-            output_["rel_enc_str_v"][idx_neuron] = rel_enc_str_v[idx_neuron]
-            output_["rel_enc_str_θh"][idx_neuron] = rel_enc_str_θh[idx_neuron]
-            output_["rel_enc_str_P"][idx_neuron] = rel_enc_str_P[idx_neuron]
+            output_["rel_enc_str_v"][idx_neuron] =
+                median(rel_enc_str_v[idx_neuron, ranges_encoding])
+            output_["rel_enc_str_θh"][idx_neuron] =
+                median(rel_enc_str_θh[idx_neuron, ranges_encoding])
+            output_["rel_enc_str_P"][idx_neuron] =
+                median(rel_enc_str_P[idx_neuron, ranges_encoding])
         end
 
         if !isempty(ranges_encoding_v)
-            output_["forwardness"][idx_neuron] =
-                median([enc[idx_neuron_str]["v_fwd"] for enc in values(tuning_strength)])
+            output_["forwardness"][idx_neuron] = _get_median_tuning_strength(
+                ranges_encoding_v,
+                idx_neuron,
+                "v_fwd",
+                tuning_strength,
+            )
         end
         if !isempty(ranges_encoding_θh)
-            output_["dorsalness"][idx_neuron] = median([
-                enc[idx_neuron_str]["θh_dorsal"] for enc in values(tuning_strength)
-            ])
+            output_["dorsalness"][idx_neuron] = _get_median_tuning_strength(
+                ranges_encoding_θh,
+                idx_neuron,
+                "θh_dorsal",
+                tuning_strength,
+            )
         end
         if !isempty(ranges_encoding_P)
-            output_["feedingness"][idx_neuron] =
-                median([enc[idx_neuron_str]["P_pos"] for enc in values(tuning_strength)])
+            output_["feedingness"][idx_neuron] = _get_median_tuning_strength(
+                ranges_encoding_P,
+                idx_neuron,
+                "P_pos",
+                tuning_strength,
+            )
         end
     end
 
     # if more than 1 segments, collate encoding changing neurons
     output_["encoding_changing_neurons"] =
-        length(output_["ranges"]) > 1 ?
+        size(output_["ranges"], 1) > 1 ?
         unique(vcat([enc["all"] for (rg, enc) in encoding_changes_corrected]...)) : []
 
     output_
