@@ -53,7 +53,7 @@ function save_dict_to_h5_json(
     if !isnothing(metadata)
         dict_save["metadata"] = metadata
     end
-    open(joinpath(path_dir_target, file_basename * ".json"), "w") do f
+    open(joinpath(path_dir, file_basename * ".json"), "w") do f
         write(f, JSON.json(dict_save, pretty = 4, allownan = allow_nan))
     end
 
