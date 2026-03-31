@@ -49,7 +49,7 @@ function save_dict_to_h5_json(
     save_dict_to_h5(joinpath(path_dir, file_basename * ".h5"), dict, metadata = metadata)
 
     # json
-    dict_save = Dict("data"=>dict)
+    dict_save = Dict{String,Any}("data"=>dict)
     if !isnothing(metadata)
         dict_save["metadata"] = metadata
     end
