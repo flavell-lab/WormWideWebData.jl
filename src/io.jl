@@ -38,6 +38,23 @@ function load_dict_from_h5(path_h5::AbstractString)
     end
 end
 
+function save_dict_to_json(
+    path_json::AbstractString,
+    dict::Dict;
+    metadata = nothing,
+    allow_nan = true,
+)
+    dict_save = Dict{String,Any}("data"=>dict)
+    if !isnothing(metadata)
+        dict_save["metadata"] = metadata
+    end
+    open(path_json, "w") do f
+        write(f, JSON.json(dict_save, pretty = 4, allownan = allow_nan))
+    end
+
+    nothing
+end
+
 function save_dict_to_h5_json(
     path_dir::AbstractString,
     file_basename::AbstractString,
@@ -49,13 +66,11 @@ function save_dict_to_h5_json(
     save_dict_to_h5(joinpath(path_dir, file_basename * ".h5"), dict, metadata = metadata)
 
     # json
-    dict_save = Dict{String,Any}("data"=>dict)
-    if !isnothing(metadata)
-        dict_save["metadata"] = metadata
-    end
-    open(joinpath(path_dir, file_basename * ".json"), "w") do f
-        write(f, JSON.json(dict_save, pretty = 4, allownan = allow_nan))
-    end
+    save_dict_to_json(
+        joinpath(path_dir, file_basename * ".json"),
+        dict,
+        metadata = metadata,
+    )
 
     nothing
 end
