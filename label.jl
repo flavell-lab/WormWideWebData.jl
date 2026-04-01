@@ -1,10 +1,14 @@
 function generate_neuropal_json(
     path_dir_target::AbstractString,
     path_neuropal_dict::AbstractString,
-    verbose::Bool = true,
+    verbose::Bool = true;
+    key_dataset::AbstractString = "dict_neuropal_label",
+    key_sub::Union{AbstractString,Nothing} = nothing,
 )
     blake_neuropal_dict = blake3(path_neuropal_dict)
-    dict_neuropal_label = load(path_neuropal_dict, "dict_neuropal_label")
+    dict_neuropal_label =
+        isnothing(key_sub) ? load(path_neuropal_dict, key_dataset) :
+        load(path_neuropal_dict, key_dataset)[key_sub]
 
     neuropal_label_compiled = Dict()
     for (uid, d) in dict_neuropal_label
