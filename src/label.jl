@@ -2,6 +2,7 @@ function generate_neuropal_json(
     path_dir_target::AbstractString,
     path_neuropal_dict::AbstractString,
     verbose::Bool = true;
+    json_name::AbstractString = "neuropal_label.json",
     key_dataset::AbstractString = "dict_neuropal_label",
     key_sub::Union{AbstractString,Nothing} = nothing,
 )
@@ -15,11 +16,12 @@ function generate_neuropal_json(
         neuropal_label_compiled[uid] = Dict("roi_to_neuron"=>d[1], "neuron_to_roi"=>d[2])
     end
 
+    path_save = joinpath(path_dir_target, json_name)
     save_dict_to_json(
-        joinpath(path_dir_target, "neuropal_label.json"),
+        path_save,
         neuropal_label_compiled,
         metadata = Dict("blake_neuropal_dict"=>blake_neuropal_dict),
     )
 
-    verbose && @info "neuropal dict saving complete"
+    verbose && @info "neuropal dict saving complete: $path_save"
 end
