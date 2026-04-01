@@ -2,6 +2,7 @@ function neuron_behavior_correlation(
     trace_array::AbstractMatrix,
     behavior::AbstractVector,
     threshold::AbstractFloat = 0.5
+)
 
     n_neuron, n_t = size(trace_array)
     n_cor = 0
@@ -12,7 +13,7 @@ function neuron_behavior_correlation(
     end
 
     return n_cor
-)
+end
 
 function check_h5_data_integrity(
     path_h5::AbstractString;
