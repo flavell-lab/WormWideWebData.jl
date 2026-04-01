@@ -5,7 +5,13 @@ function generate_neuropal_json(
     json_name::AbstractString = "neuropal_label.json",
     key_dataset::AbstractString = "dict_neuropal_label",
     key_sub::Union{AbstractString,Nothing} = nothing,
+    overwrite::Bool = false
 )
+    path_save = joinpath(path_dir_target, json_name)
+    if isfile(path_save) && !overwrite
+        error("File already exists at $path_save")
+    end
+
     blake_neuropal_dict = blake3(path_neuropal_dict)
     dict_neuropal_label =
         isnothing(key_sub) ? load(path_neuropal_dict, key_dataset) :
@@ -16,7 +22,6 @@ function generate_neuropal_json(
         neuropal_label_compiled[uid] = Dict("roi_to_neuron"=>d[1], "neuron_to_roi"=>d[2])
     end
 
-    path_save = joinpath(path_dir_target, json_name)
     save_dict_to_json(
         path_save,
         neuropal_label_compiled,
