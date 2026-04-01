@@ -1,4 +1,26 @@
-function check_h5_data_integrity(path_h5::AbstractString, check_velocity_cor::Bool = false)
+function neuron_behavior_correlation(
+    trace_array::AbstractMatrix,
+    behavior::AbstractVector,
+    threshold::AbstractFloat = 0.5
+
+    n_neuron, n_t = size(trace_array)
+    n_cor = 0
+    for idx_neuron in 1:n_neuron
+        if cor(behavior, trace_array[idx_neuron,:]) > threshold
+            n_cor += 1
+        end
+    end
+
+    return n_cor
+)
+
+function check_h5_data_integrity(
+    path_h5::AbstractString;
+    check_velocity_cor::Bool = false,
+    check_velocity_cor_threshold::AbstractFloat = 0.3,
+    check_velocity_cor_count::Integer = 10
+
+)
     fname = basename(path_h5)
     error_msg(m) = "$fname: $m"
 
@@ -34,8 +56,8 @@ function check_h5_data_integrity(path_h5::AbstractString, check_velocity_cor::Bo
     end
 
     if check_velocity_cor
-        threshold = 0.3
-        min_v_neuron = 10
+        threshold = check_velocity_cor_threshold
+        min_v_neuron = check_velocity_cor_count
         n_cor_v = neuron_behavior_correlation(
             gcamp["trace_array"],
             behavior["velocity"],
