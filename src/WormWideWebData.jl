@@ -3,6 +3,7 @@ module WormWideWebData
 using HDF5
 using JSON
 using JLD2
+using Statistics
 
 include("io.jl")
 include("label.jl")
