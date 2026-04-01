@@ -5,7 +5,7 @@ function generate_neuropal_json(
     json_name::AbstractString = "neuropal_label.json",
     key_dataset::AbstractString = "dict_neuropal_label",
     key_sub::Union{AbstractString,Nothing} = nothing,
-    overwrite::Bool = false
+    overwrite::Bool = false,
 )
     path_save = joinpath(path_dir_target, json_name)
     if isfile(path_save) && !overwrite

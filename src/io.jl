@@ -1,4 +1,3 @@
-
 function save_dict_to_h5(path_h5::AbstractString, dict::Dict; metadata = nothing)
     h5open(path_h5, "w") do file
         data = create_group(file, "data")
