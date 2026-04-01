@@ -24,4 +24,6 @@ function generate_neuropal_json(
     )
 
     verbose && @info "neuropal dict saving complete: $path_save"
+
+    return path_save
 end
