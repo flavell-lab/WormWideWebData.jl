@@ -96,8 +96,22 @@ function download_file(
     end
 end
 
-function unarchive(path_archive::AbstractString, path_target::AbstractString)
-    run(`tar -xjf $path_archive -C $path_target`)
+
+function unarchive(path_archive::AbstractString, path_target::Union{AbstractString,Nothing}=nothing)
+    if endswith(fname, ".tar.bz2")
+        if isnothing(path_target)
+            run(`tar -xjf $path_archive`)
+        else
+            mkpath(path_target)
+            run(`tar -xjf $path_archive -C $path_target`)
+        end
+    elseif endswith(fname, ".bz2")
+        run(`bunzip2 -k $path_archive`)
+    else
+        error("unsupported archive type")
+    end
+
+    nothing
 end
 
 sha256(path_file::AbstractString) = split(read(`shasum -a 256 $(path_file)`, String))[1]
