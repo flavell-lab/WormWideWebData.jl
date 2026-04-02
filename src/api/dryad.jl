@@ -62,9 +62,9 @@ function get_dryad_file(
     file_records::Vector,
     filename::AbstractString,
     path_dir_target::AbstractString,
-    token::AbstractString,
     path_dir_unarchive::Union{AbstractString,Nothing} = nothing;
     verbose::Bool = true,
+    token::AbstractString,
 )
 
     file_record = _select_dryad_file_record(file_records, filename)
@@ -118,7 +118,6 @@ function prepare_files_dryad(
         )
     end
     neuropal_label && push!(manifest, ("neuropal_label.json.bz2", nothing))
-
 
     for (fname, path_dir_target_unarchive) in manifest
         @info "processing $fname ..."
