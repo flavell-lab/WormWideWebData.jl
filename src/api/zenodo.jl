@@ -51,7 +51,8 @@ function get_zenodo_file(
     file_records::Vector,
     filename::AbstractString,
     path_dir_target::AbstractString,
-    path_dir_unarchive::Union{AbstractString,Nothing} = nothing,
+    path_dir_unarchive::Union{AbstractString,Nothing} = nothing;
+    verbose::Bool = true,
 )
     file_record = _select_zenodo_file_record(file_records, filename)
 
@@ -63,6 +64,7 @@ function get_zenodo_file(
         url_download,
         path_save,
         checksum = split(file_record["checksum"], ':')[2],
+        verbose = verbose,
     )
 
     if endswith(path_save, ".bz2")
