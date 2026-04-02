@@ -38,7 +38,7 @@ function load_dict_from_h5(path_h5::AbstractString)
 end
 
 function load_dict_from_json(path_json::AbstractString)
-    JSON.parsefile(path_json, dicttype=Dict)["data"]
+    JSON.parsefile(path_json, dicttype = Dict)["data"]
 end
 
 function save_dict_to_json(
