@@ -5,6 +5,7 @@ using JSON
 using JLD2
 using Statistics
 using Scratch
+using CSV
 
 include("io.jl")
 include("label.jl")
