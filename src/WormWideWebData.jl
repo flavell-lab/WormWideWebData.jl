@@ -4,6 +4,7 @@ using HDF5
 using JSON
 using JLD2
 using Statistics
+using Scratch
 
 include("io.jl")
 include("label.jl")
