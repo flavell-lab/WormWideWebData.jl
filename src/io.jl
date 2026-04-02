@@ -92,6 +92,7 @@ function download_file(
         return
     end
 
+    verbose && @info "downloading file: $(basename(path_save))"
     Downloads.download(url_download, path_save)
 
     if !isnothing(checksum) && f_checksum(path_save) == checksum
