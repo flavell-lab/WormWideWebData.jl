@@ -100,7 +100,7 @@ function prepare_files_dryad(
     encoding_data::Bool = false,
     verbose::Bool = true,
 )
-    file_records = get_dryad_files_metadata(record_id)
+    file_records = get_dryad_files_metadata(doi)
 
     manifest = [("processed_h5.tar.bz2", joinpath(path_dir_target, "datasets")),]
 
