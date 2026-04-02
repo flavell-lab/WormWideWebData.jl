@@ -106,7 +106,7 @@ function unarchive(path_archive::AbstractString, path_target::Union{AbstractStri
             run(`tar -xjf $path_archive -C $path_target`)
         end
     elseif endswith(path_archive, ".bz2")
-        run(`bunzip2 -k $path_archive`)
+        run(`bunzip2 -kf $path_archive`)
     else
         error("unsupported archive type")
     end
