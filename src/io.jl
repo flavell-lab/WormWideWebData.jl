@@ -75,7 +75,7 @@ function save_dict_to_h5_json(
 end
 
 function download_file(
-    url::AbstractString,
+    url_download::AbstractString,
     path_save::AbstractString;
     checksum::Union{AbstractString,Nothing} = nothing,
     f_checksum::Function = md5sum,
