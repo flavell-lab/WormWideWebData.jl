@@ -115,7 +115,7 @@ function generate_paper_datasets_json(
     check_paper_h5_datasets(datasets, path_dir_dataset)
     
     @info "generating json files..."
-    @showprogress for dataset in datasets[paper_id]
+    @showprogress for dataset in datasets
         uid = dataset["uid"]
         fname = dataset["filename"]
 
