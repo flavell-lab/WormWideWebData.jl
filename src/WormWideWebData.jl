@@ -15,6 +15,7 @@ include("label.jl")
 include("encoding.jl")
 include("data_integrity.jl")
 include("reference.jl")
+include("data_generator.jl")
 include("api/zenodo.jl")
 
 # encoding.jl
@@ -27,5 +28,7 @@ export check_h5_data_integrity
 export get_activity_info
 # io.jl
 export load_dict_from_h5, load_dict_from_json
+# data_generator.jl
+export generate_paper_datasets_json
 
 end # module WormWideWebData
