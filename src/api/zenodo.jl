@@ -36,3 +36,13 @@ function get_zenodo_metadata(
 
     return data
 end
+
+function _select_zenodo_file_record(records::Vector, filename::AbstractString)
+    for record in records
+        if record["key"] == filename
+            return record
+        end
+    end
+
+    error("file $filename not found in the given records")
+end
