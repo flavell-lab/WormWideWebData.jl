@@ -1,0 +1,148 @@
+function compute_mean_timestep(timestamp_confocal::Vector, max_segment_gap::Int=1)
+    list_diff = diff(timestamp_confocal)
+    list_idx = list_diff .< 1.2 * median(list_diff)
+    n_jump = length(list_diff)- sum(list_idx)
+    @assert n_jump <= max_segment_gap "more than 1 large gap found in timestamp_confocal: n_jump=$n_jump"
+    mean(list_diff[list_idx])
+end
+
+function parse_event_str(str::AbstractString)
+    list_event = []
+    collections_str = split(str, "],")
+    for events_str in collections_str
+        event_name, idx_str = split(events_str, "=")
+        for t in parse.(Int, split(idx_str[2:end-1], ","))
+            push!(list_event, 
+                [event_name, t]
+            )
+        end
+    end
+    return list_event
+end
+
+function get_dataset_dict(
+    path_h5_original::AbstractString;
+    θh_pos_is_ventral::Bool,
+    h5_checksum::AbstractString,
+    source_filename::AbstractString,
+    paper_id::AbstractString,
+    dataset_type::Vector{<:AbstractString},
+    dict_encoding::Union{Dict,Nothing} = nothing,
+    dict_label::Union{Dict,Nothing} = nothing,
+    events_str::Union{AbstractString,Nothing,Missing} = nothing,
+)
+    dv_correction = θh_pos_is_ventral ? -1 : 1
+
+    timing = h5read(path_h5_original, "timing")
+    behavior = h5read(path_h5_original, "behavior")
+    gcamp = h5read(path_h5_original, "gcamp")
+
+    out_ = Dict()
+    out_["metadata"] = Dict("checksum"=>h5_checksum, "source_filename"=>source_filename, "paper_id"=>paper_id)
+    out_["dataset_type"] = dataset_type
+
+    if !isnothing(dict_encoding)
+        out_["encoding"] = dict_encoding
+    end
+    if !isnothing(dict_label)
+        out_["label"] = dict_label
+    end
+
+    # timing
+    out_["timing"] = Dict(
+        "mean_timestep"=>compute_mean_timestep(timing["timestamp_confocal"]),
+        "timestamp_confocal"=>timing["timestamp_confocal"],
+        "max_t"=>size(gcamp["trace_array"], 2) # [n_neuron, n_t]
+    )
+    if !isnothing(events_str) && !ismissing(events_str)
+        out_["timing"]["event"] = parse_event_str(events_str)
+    end
+
+    # behavior
+    out_["behavior"] = Dict(b=>behavior[b] for b in ["angular_velocity", "head_angle", "velocity", "reversal_events"])
+    out_["behavior"]["head_angle"] .*= dv_correction
+    out_["behavior"]["angular_velocity"] .*= dv_correction
+
+    # gcamp
+    out_["gcamp"] = Dict("trace_array"=>gcamp["trace_array"]) # must
+    for k in ["trace_array_original"]
+        if haskey(gcamp, k)
+            out_["gcamp"][k] = gcamp[k]
+        end
+    end
+
+    out_
+end
+
+function generate_paper_datasets_json(
+    path_dir_output::AbstractString,
+    path_dir_paper::AbstractString,
+    paper_id::AbstractString,
+    datasets::Vector{<:Dict};
+    neuropal_label::Bool=false,
+    encoding_data::Bool=false,
+    dir_datasets::AbstractString="datasets"
+)
+    neuron_categorization = nothing
+    encoding_changes_corrected = nothing
+    relative_encoding_strength_median = nothing
+    tuning_strength = nothing
+    sampled_tau_vals_median = nothing
+    fit_ranges = nothing
+    neuropal_data = nothing
+
+    if encoding_data
+        @info "loading encoding data files"
+        neuron_categorization = load_dict_from_h5(joinpath(path_dir_paper, "neuron_categorization.h5"))
+        encoding_changes_corrected = load_dict_from_h5(joinpath(path_dir_paper, "encoding_changes_corrected.h5"))
+        relative_encoding_strength_median = load_dict_from_h5(joinpath(path_dir_paper, "relative_encoding_strength_median.h5"))
+        tuning_strength = load_dict_from_h5(joinpath(path_dir_paper, "tuning_strength.h5"))
+        sampled_tau_vals_median = load_dict_from_h5(joinpath(path_dir_paper, "sampled_tau_vals_median.h5"))
+        fit_ranges = load_dict_from_h5(joinpath(path_dir_paper, "fit_ranges.h5"))
+    end
+    if neuropal_label
+        @info "loading neuropal data"
+        neuropal_data = load_dict_from_json(joinpath(path_dir_paper, "neuropal_label.json"))
+    end
+
+    path_dir_dataset = joinpath(path_dir_paper, dir_datasets)
+    path_dir_json = joinpath(path_dir_output, paper_id)
+    mkpath(path_dir_json)
+    
+    @info "generating json files..."
+    @showprogress for dataset in datasets_data[paper_id]
+        uid = dataset["uid"]
+        fname = dataset["filename"]
+
+        path_h5 = joinpath(path_dir_dataset, fname)
+
+        dict_encoding = encoding_data ? WormWideWebData.get_encoding_dictionary(
+            neuron_categorization[uid],
+            encoding_changes_corrected[uid],
+            tuning_strength[uid],
+            sampled_tau_vals_median[uid],
+            fit_ranges[uid],
+            relative_encoding_strength_median[uid]
+        ) : nothing
+        dict_label = neuropal_label && haskey(neuropal_data, uid) ? neuropal_data[uid]["roi_to_neuron"] : nothing
+
+        # generate output dict
+        dict_output = get_dataset_dict(
+            path_h5,
+            θh_pos_is_ventral=dataset["θh_pos_is_ventral"],
+            dataset_type=split(dataset["type"],","),
+            dict_encoding=dict_encoding,
+            dict_label=dict_label,
+            events_str=dataset["event"],
+            h5_checksum=dataset["checksum"],
+            source_filename=dataset["filename"],
+            paper_id=paper_id
+        )
+
+        # write to json
+        path_json = joinpath(path_dir_json, "$(paper_id)_$(uid).json")
+        open(path_json, "w") do f
+            JSON.print(f, dict_output)
+        end
+    end
+end
