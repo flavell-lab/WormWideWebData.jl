@@ -70,3 +70,29 @@ function check_h5_data_integrity(
 
     nothing
 end
+
+function check_paper_h5_datasets(
+    datasets_data::Dict,
+    paper_id::AbstractString,
+    path_dir_datasets::AbstractString;
+    verbose::Bool = false,
+)
+    for dataset in datasets_data[paper_id]
+        verbose && @info "Checking dataset $(dataset["uid"])"
+        path_h5 = joinpath(path_dir_datasets, dataset["filename"])
+        # check if file exists
+        uid = dataset["uid"]
+        @assert isfile(path_h5) "$(uid) does not exist at $path_h5"
+
+        # verify checksum
+        checksum_compute = sha256(path_h5)
+        checksum_stored = dataset["checksum"]
+
+        @assert checksum_compute == checksum_stored "sha256 does not match for $uid.\nexpected: $checksum_stored\ncomputed: $checksum_compute"
+
+        # check behavior and neural data
+        check_h5_data_integrity(path_h5)
+    end
+
+    nothing
+end
