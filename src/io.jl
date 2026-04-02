@@ -77,3 +77,5 @@ end
 sha256(path_file::AbstractString) = split(read(`shasum -a 256 $(path_file)`, String))[1]
 
 blake3(path_file::AbstractString) = split(read(`b3sum $(path_file)`, String))[1]
+
+md5sum(path_file::AbstractString) = split(read(`md5sum $(path_file)`, String))[1]
