@@ -46,3 +46,26 @@ function _select_zenodo_file_record(records::Vector, filename::AbstractString)
 
     error("file $filename not found in the given records")
 end
+
+function get_zenodo_file(
+    file_records::Vector,
+    filename::AbstractString,
+    path_dir_target::AbstractString,
+    path_dir_unarchive::Union{AbstractString,Nothing} = nothing,
+)
+    file_record = _select_zenodo_file_record(file_records, filename)
+
+    mkpath(path_dir_target)
+    path_save = joinpath(path_dir_target, filename)
+
+    url_download = file_record["links"]["self"]
+    download_file(
+        url_download,
+        path_save,
+        checksum = split(file_record["checksum"], ':')[2],
+    )
+
+    if endswith(path_save, ".bz2")
+        unarchive(path_save, path_dir_unarchive)
+    end
+end
