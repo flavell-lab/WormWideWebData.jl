@@ -16,6 +16,8 @@ include("data_integrity.jl")
 include("reference.jl")
 include("api/zenodo.jl")
 
+# encoding.jl
+export generate_encoding_files
 # label.jl
 export generate_neuropal_json
 # data_integrity.jl
