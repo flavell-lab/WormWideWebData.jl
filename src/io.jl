@@ -84,6 +84,7 @@ function download_file(
     checksum::Union{AbstractString,Nothing} = nothing,
     f_checksum::Function = md5sum,
     verbose::Bool = true,
+    headers::AbstractVector = Pair{String,String}[],
 )
     # file exists, check the checksum
     if !isnothing(checksum) && isfile(path_save) && f_checksum(path_save) == checksum
@@ -102,7 +103,7 @@ function download_file(
             end
         end
 
-        Downloads.download(url_download, path_save, progress = _progress)
+        Downloads.download(url_download, path_save, progress = _progress, headers = headers)
         update!(p, 100)
         finish!(p)
     else
