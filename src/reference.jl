@@ -54,9 +54,10 @@ function check_dataset_type(papers, dataset_types)
             [dataset_type["id"] for dataset_type in dataset_types["common"]],
         )
         for dataset in datasets
+            uid = dataset["uid"]
             list_type = split(dataset["type"], ',')
             for type_ in list_type
-                @assert type_ in available_types "$paper_id|$(dataset[:uid]): dataset type \"$type_\" does not exist in dataset_types (initial_data_activity_dataset_types.json)"
+                @assert type_ in available_types "$paper_id|$uid: dataset type \"$type_\" does not exist in dataset_types (initial_data_activity_dataset_types.json)"
             end
         end
     end
