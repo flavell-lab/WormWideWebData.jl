@@ -93,16 +93,16 @@ function download_file(
     end
 
     if verbose
-        p = Progress(100; dt=0.2, desc="Downloading: ", barglyphs=BarGlyphs("[=> ]"))
-        
+        p = Progress(100; dt = 0.2, desc = "Downloading: ", barglyphs = BarGlyphs("[=> ]"))
+
         function _progress(total, downloaded)
             if total > 0
                 percentage = Int(round(100 * downloaded / total))
-                update!(p, min(percentage, 99)) 
+                update!(p, min(percentage, 99))
             end
         end
 
-        Downloads.download(url_download, path_save, progress=_progress)
+        Downloads.download(url_download, path_save, progress = _progress)
         update!(p, 100)
         finish!(p)
     else
