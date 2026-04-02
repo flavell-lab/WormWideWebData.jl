@@ -62,9 +62,12 @@ function check_dataset_type(papers, dataset_types)
     end
 end
 
-function get_activity_info()
-    path_dir_activity =
-        sync_repo_sparse(REFERENCE_REPO_URL, REFERENCE_ACTIVITY_PATH, REFERENCE_SCRATCH_DIR)
+function get_activity_info(
+    repo_url::AbstractString = REFERENCE_REPO_URL,
+    repo_activity_path::AbstractString = REFERENCE_ACTIVITY_PATH,
+    scratch_dir::AbstractString = REFERENCE_SCRATCH_DIR,
+)
+    path_dir_activity = sync_repo_sparse(repo_url, repo_activity_path, scratch_dir)
     path_json_paper = joinpath(path_dir_activity, "initial_data_activity_papers.json")
     path_json_type = joinpath(path_dir_activity, "initial_data_activity_dataset_types.json")
 
