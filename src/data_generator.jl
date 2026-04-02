@@ -83,6 +83,8 @@ function generate_paper_datasets_json(
     encoding_data::Bool=false,
     dir_datasets::AbstractString="datasets"
 )
+
+    # load encoding and neuropal data
     neuron_categorization = nothing
     encoding_changes_corrected = nothing
     relative_encoding_strength_median = nothing
@@ -108,6 +110,9 @@ function generate_paper_datasets_json(
     path_dir_dataset = joinpath(path_dir_paper, dir_datasets)
     path_dir_json = joinpath(path_dir_output, paper_id)
     mkpath(path_dir_json)
+
+    # check integrity
+    check_paper_h5_datasets(datasets, path_dir_dataset)
     
     @info "generating json files..."
     @showprogress for dataset in datasets[paper_id]
