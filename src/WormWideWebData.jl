@@ -24,5 +24,7 @@ export generate_neuropal_json
 export check_h5_data_integrity
 # reference.jl
 export get_activity_info
+# io.jl
+export load_dict_from_h5, load_dict_from_json
 
 end # module WormWideWebData
