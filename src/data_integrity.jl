@@ -72,12 +72,11 @@ function check_h5_data_integrity(
 end
 
 function check_paper_h5_datasets(
-    datasets_data::Dict,
-    paper_id::AbstractString,
+    datasets::Dict,
     path_dir_datasets::AbstractString;
     verbose::Bool = false,
 )
-    for dataset in datasets_data[paper_id]
+    for dataset in datasets
         verbose && @info "Checking dataset $(dataset["uid"])"
         path_h5 = joinpath(path_dir_datasets, dataset["filename"])
         # check if file exists
