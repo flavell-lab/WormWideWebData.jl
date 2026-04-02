@@ -165,3 +165,44 @@ function generate_paper_datasets_json(
         end
     end
 end
+
+function generate_all_paper_json(
+    path_dir_root_output::AbstractString,
+    path_dir_root_source::AbstractString,
+)
+    path_dir_paper = joinpath(path_dir_root_source, paper_id)
+
+    papers_data, datasets_data, dataset_types = get_activity_info()
+    papers_data = Dict(paper["paper_id"] => paper for paper in papers_data)
+
+    for paper_id in keys(papers_data)
+        @info "processing paper $paper_id"
+        q_neuropal_label = papers_data[paper_id]["neuropal_label"]
+        q_encoding_data = papers_data[paper_id]["encoding_data"]
+
+        if !haskey(papers_data[paper_id], "repository")
+            continue
+        end
+        type_repo = papers_data[paper_id]["repository"]["type"]
+        if type_repo == "zenodo"
+            zenodo_id = papers_data[paper_id]["repository"]["record_id"]
+
+            prepare_files_zenodo(
+                zenodo_id,
+                path_dir_paper,
+                neuropal_label = q_neuropal_label,
+                encoding_data = q_encoding_data,
+            )
+
+            generate_paper_datasets_json(
+                path_dir_root_output,
+                path_dir_paper,
+                paper_id,
+                datasets_data[paper_id],
+                neuropal_label = q_neuropal_label,
+                encoding_data = q_encoding_data,
+            )
+        elseif type_repo == "dryad"
+        end
+    end
+end
