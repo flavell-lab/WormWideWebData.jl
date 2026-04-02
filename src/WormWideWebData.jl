@@ -6,6 +6,7 @@ using JLD2
 using Statistics
 using Scratch
 using CSV
+using HTTP
 
 include("io.jl")
 include("label.jl")
