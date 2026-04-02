@@ -72,7 +72,7 @@ function check_h5_data_integrity(
 end
 
 function check_paper_h5_datasets(
-    datasets::Vector{Dict},
+    datasets::Vector{<:Dict},
     path_dir_datasets::AbstractString;
     verbose::Bool = false,
 )
