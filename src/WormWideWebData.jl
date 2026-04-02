@@ -8,6 +8,7 @@ using Scratch
 using CSV
 using HTTP
 using Downloads
+using ProgressMeter
 
 include("io.jl")
 include("label.jl")
