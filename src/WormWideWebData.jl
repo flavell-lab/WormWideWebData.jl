@@ -7,6 +7,7 @@ using Statistics
 using Scratch
 using CSV
 using HTTP
+using URIs
 using Downloads
 using ProgressMeter
 
