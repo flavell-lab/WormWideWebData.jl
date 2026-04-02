@@ -74,6 +74,28 @@ function save_dict_to_h5_json(
     nothing
 end
 
+function download_file(
+    url::AbstractString,
+    path_save::AbstractString;
+    checksum::Union{AbstractString,Nothing} = nothing,
+    f_checksum::Function = md5sum,
+)
+    # file exists, check the checksum
+    if !isnothing(checksum) && isfile(path_save) && f_checksum(path_save) == checksum
+        # no need to download again
+        @info "exisiting file matches the given checksum: $(basename(path_save))"
+        return
+    end
+
+    Downloads.download(url_download, path_save)
+
+    if !isnothing(checksum) && f_checksum(path_save) == checksum
+        return
+    else
+        error("file downloaded but checksum is incorrect")
+    end
+end
+
 sha256(path_file::AbstractString) = split(read(`shasum -a 256 $(path_file)`, String))[1]
 
 blake3(path_file::AbstractString) = split(read(`b3sum $(path_file)`, String))[1]
