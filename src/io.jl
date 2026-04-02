@@ -96,6 +96,10 @@ function download_file(
     end
 end
 
+function unarchive(path_archive::AbstractString, path_target::AbstractString)
+    run(`tar -xjf $path_archive -C $path_target`)
+end
+
 sha256(path_file::AbstractString) = split(read(`shasum -a 256 $(path_file)`, String))[1]
 
 blake3(path_file::AbstractString) = split(read(`b3sum $(path_file)`, String))[1]
