@@ -72,8 +72,8 @@ function get_activity_info(
     path_json_type = joinpath(path_dir_activity, "initial_data_activity_dataset_types.json")
 
     # get paper_id list
-    papers = JSON.parsefile(path_json_paper, dicttype = Dict)
-    list_paper_id = [paper["paper_id"] for paper in papers]
+    papers_data = JSON.parsefile(path_json_paper, dicttype = Dict)
+    list_paper_id = [paper["paper_id"] for paper in papers_data]
 
     # paper data
     datasets_data = Dict{String,Any}()
@@ -90,5 +90,5 @@ function get_activity_info(
     dataset_types = JSON.parsefile(path_json_type, dicttype = Dict)
     check_dataset_type(datasets_data, dataset_types)
 
-    return datasets_data, dataset_types
+    return papers_data, datasets_data, dataset_types
 end
