@@ -71,3 +71,45 @@ function get_zenodo_file(
         unarchive(path_save, path_dir_unarchive)
     end
 end
+
+function prepare_files_zenodo(
+    record_id::AbstractString,
+    path_dir_target::AbstractString;
+    neuropal_label::Bool = false,
+    encoding_data::Bool = false,
+    verbose::Bool = true,
+)
+    zenodo_record = get_zenodo_metadata(record_id, fetch_latest = true)
+    file_records = zenodo_record["files"]
+
+    manifest = [("processed_h5.tar.bz2", joinpath(path_dir_target, "datasets")),]
+
+    if encoding_data
+        manifest = vcat(
+            manifest,
+            [
+                ("neuron_categorization.h5.bz2", nothing),
+                ("encoding_changes_corrected.h5.bz2", nothing),
+                ("relative_encoding_strength_median.h5.bz2", nothing),
+                ("tuning_strength.h5.bz2", nothing),
+                ("sampled_tau_vals_median.h5.bz2", nothing),
+                ("fit_ranges.h5.bz2", nothing),
+            ],
+        )
+    end
+    neuropal_label && push!(manifest, ("neuropal_label.json.bz2", nothing))
+
+
+    for (fname, path_dir_target_unarchive) in manifest
+        @info "processing $fname ..."
+        get_zenodo_file(
+            file_records,
+            fname,
+            path_dir_target,
+            path_dir_target_unarchive,
+            verbose = verbose,
+        )
+    end
+
+    nothing
+end
