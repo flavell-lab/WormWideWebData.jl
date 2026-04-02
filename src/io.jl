@@ -92,16 +92,22 @@ function download_file(
         return
     end
 
-    verbose && @info "downloading file: $(basename(path_save))"
-    progress_callback = if verbose
-        p = Progress(100; dt = 0.5, desc = "Downloading: ", barglyphs = BarGlyphs("[=> ]"))
-        (total, downloaded) -> total > 0 && update!(p, Int(round(100downloaded/total)))
-    else
-        (total, downloaded) -> nothing
-    end
+    if verbose
+        p = Progress(100; dt=0.2, desc="Downloading: ", barglyphs=BarGlyphs("[=> ]"))
+        
+        function _progress(total, downloaded)
+            if total > 0
+                percentage = Int(round(100 * downloaded / total))
+                update!(p, min(percentage, 99)) 
+            end
+        end
 
-    Downloads.download(url_download, path_save, progress = progress_callback)
-    verbose && finish!(p)
+        Downloads.download(url_download, path_save, progress=_progress)
+        update!(p, 100)
+        finish!(p)
+    else
+        Downloads.download(url_download, path_save)
+    end
 
     if !isnothing(checksum) && f_checksum(path_save) == checksum
         return
