@@ -15,8 +15,8 @@ include("label.jl")
 include("encoding.jl")
 include("data_integrity.jl")
 include("reference.jl")
-include("data_generator.jl")
 include("api/zenodo.jl")
+include("data_generator.jl")
 
 # encoding.jl
 export generate_encoding_files, get_encoding_dictionary
