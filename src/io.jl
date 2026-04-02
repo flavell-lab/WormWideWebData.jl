@@ -79,11 +79,12 @@ function download_file(
     path_save::AbstractString;
     checksum::Union{AbstractString,Nothing} = nothing,
     f_checksum::Function = md5sum,
+    verbose::Bool = true,
 )
     # file exists, check the checksum
     if !isnothing(checksum) && isfile(path_save) && f_checksum(path_save) == checksum
         # no need to download again
-        @info "exisiting file matches the given checksum: $(basename(path_save))"
+        verbose && @info "exisiting file matches the given checksum: $(basename(path_save))"
         return
     end
 
