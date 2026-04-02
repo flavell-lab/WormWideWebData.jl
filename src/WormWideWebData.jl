@@ -17,6 +17,7 @@ include("encoding.jl")
 include("data_integrity.jl")
 include("reference.jl")
 include("api/zenodo.jl")
+include("api/dryad.jl")
 include("data_generator.jl")
 
 # encoding.jl
