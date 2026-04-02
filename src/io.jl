@@ -97,7 +97,9 @@ function download_file(
 end
 
 
-function unarchive(path_archive::AbstractString, path_target::Union{AbstractString,Nothing}=nothing)
+function unarchive(path_archive::AbstractString, path_target::Union{AbstractString,Nothing}=nothing,
+    verbose::Bool=false)
+    verbose && @info "unarchiving $path_archive"
     if endswith(path_archive, ".tar.bz2")
         if isnothing(path_target)
             run(`tar -xjf $path_archive`)
