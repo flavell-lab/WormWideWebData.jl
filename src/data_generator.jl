@@ -110,7 +110,7 @@ function generate_paper_datasets_json(
     mkpath(path_dir_json)
     
     @info "generating json files..."
-    @showprogress for dataset in datasets_data[paper_id]
+    @showprogress for dataset in datasets[paper_id]
         uid = dataset["uid"]
         fname = dataset["filename"]
 
