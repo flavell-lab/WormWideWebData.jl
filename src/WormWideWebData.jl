@@ -7,12 +7,14 @@ using Statistics
 using Scratch
 using CSV
 using HTTP
+using Downloads
 
 include("io.jl")
 include("label.jl")
 include("encoding.jl")
 include("data_integrity.jl")
 include("reference.jl")
+include("api/zenodo.jl")
 
 # label.jl
 export generate_neuropal_json
