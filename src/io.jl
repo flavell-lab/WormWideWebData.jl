@@ -73,6 +73,7 @@ function save_dict_to_h5_json(
         joinpath(path_dir, file_basename * ".json"),
         dict,
         metadata = metadata,
+        allow_nan = allow_nan
     )
 
     nothing
