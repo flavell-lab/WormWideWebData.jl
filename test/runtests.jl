@@ -25,11 +25,8 @@ end
 
     @testset "save/load dict helpers" begin
         mktempdir() do tmp
-            dict = Dict(
-                "scalar" => 1.5,
-                "vector" => [1, 2, 3],
-                "nested" => Dict("value" => 7),
-            )
+            dict =
+                Dict("scalar" => 1.5, "vector" => [1, 2, 3], "nested" => Dict("value" => 7))
             metadata = Dict("source" => "unit-test")
 
             WormWideWebData.save_dict_to_h5_json(
@@ -76,7 +73,7 @@ end
                 WormWideWebData.download_file(
                     "$base_url/protected",
                     path_save;
-                    headers = Pair{String,String}["Authorization" => "Bearer token"],
+                    headers = Pair{String,String}["Authorization"=>"Bearer token"],
                     verbose = false,
                     checksum = "payload",
                     f_checksum = path -> read(path, String),
@@ -86,7 +83,11 @@ end
 
             with_local_http_server(req -> HTTP.Response(200, "open-data")) do base_url
                 path_save = joinpath(tmp, "public.bin")
-                WormWideWebData.download_file("$base_url/public", path_save; verbose = false)
+                WormWideWebData.download_file(
+                    "$base_url/public",
+                    path_save;
+                    verbose = false,
+                )
                 @test read(path_save, String) == "open-data"
             end
         end
@@ -137,10 +138,8 @@ end
             ),
         )
 
-        encoding_changes_corrected = Dict(
-            "1" => Dict("all" => [1]),
-            "2" => Dict("all" => [2]),
-        )
+        encoding_changes_corrected =
+            Dict("1" => Dict("all" => [1]), "2" => Dict("all" => [2]))
 
         tuning_strength = Dict(
             "1" => Dict(
