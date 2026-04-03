@@ -66,6 +66,8 @@ Each file should contain a metadata entry:
   - checksum_h5: sha256 checksum of the h5 source file
   - paper_id: paper id
 
+checksum_h5 should match the checksum found on https://github.com/flavell-lab/WormWideWeb-data/tree/main/activity/raw
+
 ## Running Tests
 
 ```bash
