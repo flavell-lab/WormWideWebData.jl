@@ -91,8 +91,8 @@ end
             @test isfile(path_h5)
             @test isfile(path_json)
 
-            loaded_h5 = WormWideWebData.load_dict_from_h5(path_h5)
-            loaded_json = WormWideWebData.load_dict_from_json(path_json)
+            loaded_h5 = WormWideWebData.load_dict_from_h5(path_h5).data
+            loaded_json = WormWideWebData.load_dict_from_json(path_json).data
 
             @test loaded_h5["scalar"] == 1.5
             @test loaded_h5["nested"]["value"] == 7
