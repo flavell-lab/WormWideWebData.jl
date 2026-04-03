@@ -1,19 +1,48 @@
+DRYAD_SESSION_TOKEN = ""
+
 """
     get_dryad_token(client_id, client_secret)
 
 Request an OAuth access token from Dryad using client credentials.
 """
-function get_dryad_token(client_id::AbstractString, client_secret::AbstractString)
+function get_dryad_token(client_id::AbstractString="", client_secret::AbstractString="")
+    global DRYAD_SESSION_TOKEN
+
+    # 1. Check for existing session token
+    if !isempty(DRYAD_SESSION_TOKEN)
+        return DRYAD_SESSION_TOKEN
+    end
+
+    # 2. Check environmental variable for token
+    env_token = get(ENV, "DRYAD_TOKEN", "")
+    if !isempty(env_token)
+        DRYAD_SESSION_TOKEN = env_token
+        return DRYAD_SESSION_TOKEN
+    end
+
+    # 3. If credentials aren't provided and no ENV token found, alert the user
+    if isempty(client_id) || isempty(client_secret)
+        error("No session or environment token found. Please provide client_id and client_secret.")
+    end
+
+    # 4. Use client id and secret to get a new token
     url = "https://datadryad.org/oauth/token"
     body = Dict(
         "grant_type" => "client_credentials",
         "client_id" => client_id,
         "client_secret" => client_secret,
     )
-    resp = HTTP.post(url, ["Content-Type" => "application/json"], JSON.json(body))
-    response = JSON.parse(String(resp.body))
 
-    return response["access_token"]
+    try
+        resp = HTTP.post(url, ["Content-Type" => "application/json"], JSON.json(body))
+        response = JSON.parse(String(resp.body))
+        
+        # 5. Save it for session usage and return
+        DRYAD_SESSION_TOKEN = response["access_token"]
+        return DRYAD_SESSION_TOKEN
+    catch e
+        error("Failed to retrieve Dryad token from API: $e")
+    end
 end
 
 """
