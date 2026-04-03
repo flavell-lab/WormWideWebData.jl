@@ -19,54 +19,32 @@ Pkg.develop(path=".")
 Or add from a remote git URL if this repository is hosted.
 
 ## Quick Start
-
-Load metadata for papers and datasets:
-
+### Generating encoding and neuropal files
+See below to generate encoding data files (derived from analysis_dict.jld2, fit_results.jld2, etc.) for data generation.
 ```julia
 using WormWideWebData
+path_dir_target = "/kfc_encoding_h5/"
+path_analysis_dict = ".../analysis_dict.jld2"
+path_fit_results = ".../fit_results.jld2"
+path_relative_encoding_strength = ".../relative_encoding_strength.jld2"
+path_neuropal = ".../dict_neuropal_label.jld2"
 
-papers_data, datasets_data, dataset_types = get_activity_info()
-```
+generate_neuropal_json(path_dir_target, path_neuropal)
 
-Generate dataset JSON files for one paper:
-
-```julia
-using WormWideWebData
-
-paper_id = "your_paper_id"
-generate_paper_datasets_json(
-    "output_json_dir",
-    "paper_work_dir",
-    paper_id,
-    datasets_data[paper_id];
-    neuropal_label=false,
-    encoding_data=false,
+generate_encoding_files(
+    path_dir_target,
+    path_analysis_dict,
+    path_fit_results,
+    path_relative_encoding_strength
 )
 ```
-
-Generate normalized Neuropal labels:
-
+### Generating JSON files for the website
 ```julia
-using WormWideWebData
-
-generate_neuropal_json(
-    "paper_work_dir",
-    "path/to/neuropal_labels.jld2",
+generate_all_paper_json(
+    "/www-data/data/",
+    "/www-data/"
 )
 ```
-
-## Exported API
-
-- `generate_encoding_files(path_dir_target, path_analysis_dict, path_fit_results, path_relative_encoding_strength; verbose=true)`
-- `get_encoding_dictionary(...)`
-- `generate_neuropal_json(path_dir_target, path_neuropal_dict, verbose=true; ...)`
-- `check_h5_data_integrity(path_h5; ...)`
-- `get_activity_info(repo_url=..., repo_activity_path=..., scratch_dir=...)`
-- `load_dict_from_h5(path_h5)`
-- `load_dict_from_json(path_json)`
-- `generate_paper_datasets_json(path_dir_output, path_dir_paper, paper_id, datasets; ...)`
-
-Most additional helpers are internal but documented in source.
 
 ## Running Tests
 
