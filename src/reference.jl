@@ -2,6 +2,12 @@ REFERENCE_REPO_URL = "git@github.com:flavell-lab/WormWideWeb-data.git"
 REFERENCE_ACTIVITY_PATH = "activity"
 REFERENCE_SCRATCH_DIR = get_scratch!("wormwideweb-data")
 
+"""
+    sync_repo_sparse(repo_url, target_subdir, workspace)
+
+Clone or update a sparse checkout of `repo_url` into `workspace`, restricted to
+`target_subdir`. Returns the local path to the synced subdirectory.
+"""
 function sync_repo_sparse(repo_url, target_subdir, workspace)
     buffer_out = IOBuffer()
     buffer_err = IOBuffer()
@@ -42,6 +48,12 @@ function sync_repo_sparse(repo_url, target_subdir, workspace)
     return joinpath(workspace, target_subdir)
 end
 
+"""
+    check_dataset_type(papers, dataset_types)
+
+Assert that each dataset type listed in `papers` exists in the allowed type
+definitions from `dataset_types`.
+"""
 function check_dataset_type(papers, dataset_types)
     for paper_id in keys(papers)
         @assert haskey(dataset_types, paper_id) "Entry for paper \"$paper_id\" is missing in dataset_types (initial_data_activity_dataset_types.json)"
@@ -63,6 +75,12 @@ function check_dataset_type(papers, dataset_types)
     end
 end
 
+"""
+    get_activity_info(repo_url=REFERENCE_REPO_URL, repo_activity_path=REFERENCE_ACTIVITY_PATH, scratch_dir=REFERENCE_SCRATCH_DIR)
+
+Load paper metadata, dataset rows, and dataset-type definitions from the
+reference activity repository. Returns `(papers_data, datasets_data, dataset_types)`.
+"""
 function get_activity_info(
     repo_url::AbstractString = REFERENCE_REPO_URL,
     repo_activity_path::AbstractString = REFERENCE_ACTIVITY_PATH,

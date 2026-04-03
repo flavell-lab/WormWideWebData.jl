@@ -1,3 +1,9 @@
+"""
+    generate_neuropal_json(path_dir_target, path_neuropal_dict, verbose=true; json_name="neuropal_label.json", key_dataset="dict_neuropal_label", key_sub=nothing, overwrite=false)
+
+Convert a Neuropal label dictionary stored in JLD2 into a normalized JSON file
+with checksum metadata.
+"""
 function generate_neuropal_json(
     path_dir_target::AbstractString,
     path_neuropal_dict::AbstractString,

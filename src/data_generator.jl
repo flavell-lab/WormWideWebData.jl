@@ -1,3 +1,9 @@
+"""
+    compute_mean_timestep(timestamp_confocal, max_segment_gap=1)
+
+Estimate a robust mean timestep by ignoring large timestamp jumps interpreted
+as segment boundaries.
+"""
 function compute_mean_timestep(timestamp_confocal::Vector, max_segment_gap::Int = 1)
     list_diff = diff(timestamp_confocal)
     list_idx = list_diff .< 1.2 * median(list_diff)
@@ -6,6 +12,12 @@ function compute_mean_timestep(timestamp_confocal::Vector, max_segment_gap::Int 
     mean(list_diff[list_idx])
 end
 
+"""
+    parse_event_str(str)
+
+Parse an event string formatted like `"event=[1,2],other=[3]"` into a vector
+of `[event_name, index]` pairs.
+"""
 function parse_event_str(str::AbstractString)
     list_event = Vector{Vector{Any}}()
     for m in eachmatch(r"([^=,\s]+)\s*=\s*\[([^\]]*)\]", str)
@@ -23,6 +35,12 @@ function parse_event_str(str::AbstractString)
     return list_event
 end
 
+"""
+    get_dataset_dict(path_h5_original; θh_pos_is_ventral, h5_checksum, source_filename, paper_id, dataset_type, dict_encoding=nothing, dict_label=nothing, events_str=nothing)
+
+Convert a source HDF5 dataset into the normalized dictionary schema used for
+JSON export.
+"""
 function get_dataset_dict(
     path_h5_original::AbstractString;
     θh_pos_is_ventral::Bool,
@@ -84,6 +102,12 @@ function get_dataset_dict(
     out_
 end
 
+"""
+    generate_paper_datasets_json(path_dir_output, path_dir_paper, paper_id, datasets; neuropal_label=false, encoding_data=false, dir_datasets="datasets")
+
+Generate one JSON file per dataset entry for a paper after validating source
+HDF5 files and optionally attaching encoding/label metadata.
+"""
 function generate_paper_datasets_json(
     path_dir_output::AbstractString,
     path_dir_paper::AbstractString,
@@ -171,6 +195,12 @@ function generate_paper_datasets_json(
     end
 end
 
+"""
+    generate_all_paper_json(path_dir_root_output, path_dir_root_source)
+
+Fetch activity metadata and generate dataset JSON outputs for all supported
+papers in the reference catalog.
+"""
 function generate_all_paper_json(
     path_dir_root_output::AbstractString,
     path_dir_root_source::AbstractString,

@@ -1,3 +1,9 @@
+"""
+    get_zenodo_metadata(record_id=nothing; request_url=nothing, fetch_latest=true)
+
+Fetch Zenodo record metadata by `record_id` or direct API URL. When
+`fetch_latest=true`, follows the record's `links.latest` endpoint once.
+"""
 function get_zenodo_metadata(
     record_id::Union{AbstractString,Nothing} = nothing;
     request_url::Union{AbstractString,Nothing} = nothing,
@@ -37,6 +43,11 @@ function get_zenodo_metadata(
     return data
 end
 
+"""
+    _select_zenodo_file_record(records, filename)
+
+Internal helper that selects a file record whose `key` matches `filename`.
+"""
 function _select_zenodo_file_record(records::Vector, filename::AbstractString)
     for record in records
         if record["key"] == filename
@@ -47,6 +58,12 @@ function _select_zenodo_file_record(records::Vector, filename::AbstractString)
     error("file $filename not found in the given records")
 end
 
+"""
+    get_zenodo_file(file_records, filename, path_dir_target, path_dir_unarchive=nothing; verbose=true)
+
+Download one file from Zenodo metadata records, verify checksum, and optionally
+unarchive `.bz2` outputs.
+"""
 function get_zenodo_file(
     file_records::Vector,
     filename::AbstractString,
@@ -72,6 +89,12 @@ function get_zenodo_file(
     end
 end
 
+"""
+    prepare_files_zenodo(record_id, path_dir_target; neuropal_label=false, encoding_data=false, verbose=true)
+
+Download the required file bundle for a Zenodo-backed paper into
+`path_dir_target`.
+"""
 function prepare_files_zenodo(
     record_id::AbstractString,
     path_dir_target::AbstractString;

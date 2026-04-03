@@ -1,3 +1,9 @@
+"""
+WormWideWebData
+
+Utilities for downloading, validating, transforming, and exporting
+WormWideWeb activity datasets.
+"""
 module WormWideWebData
 
 using HDF5

@@ -1,3 +1,9 @@
+"""
+    save_dict_to_h5(path_h5, dict; metadata=nothing)
+
+Write `dict` to an HDF5 file under the `"data"` group. If `metadata` is
+provided, it is written under the `"metadata"` group.
+"""
 function save_dict_to_h5(path_h5::AbstractString, dict::Dict; metadata = nothing)
     h5open(path_h5, "w") do file
         data = create_group(file, "data")
@@ -10,6 +16,12 @@ function save_dict_to_h5(path_h5::AbstractString, dict::Dict; metadata = nothing
     end
 end
 
+"""
+    _write_dict(h5group, dict)
+
+Internal recursive writer used by `save_dict_to_h5` to serialize nested `Dict`
+values into HDF5 groups and datasets.
+"""
 function _write_dict(h5group, dict::Dict)
     for (k, v) in dict
         key = string(k)
@@ -31,16 +43,33 @@ function _write_dict(h5group, dict::Dict)
     end
 end
 
+"""
+    load_dict_from_h5(path_h5)
+
+Load and return the `"data"` group from an HDF5 file as a dictionary-like
+structure.
+"""
 function load_dict_from_h5(path_h5::AbstractString)
     h5open(path_h5, "r") do file
         return read(file, "data")
     end
 end
 
+"""
+    load_dict_from_json(path_json)
+
+Parse a JSON file and return the value stored in its top-level `"data"` field.
+"""
 function load_dict_from_json(path_json::AbstractString)
     JSON.parsefile(path_json, dicttype = Dict)["data"]
 end
 
+"""
+    save_dict_to_json(path_json, dict; metadata=nothing, allow_nan=true)
+
+Write `dict` to JSON using the schema `{"data": ..., "metadata": ...}`.
+When `allow_nan=false`, JSON encoding fails on NaN and Inf values.
+"""
 function save_dict_to_json(
     path_json::AbstractString,
     dict::Dict;
@@ -58,6 +87,12 @@ function save_dict_to_json(
     nothing
 end
 
+"""
+    save_dict_to_h5_json(path_dir, file_basename, dict; metadata=nothing, allow_nan=true)
+
+Save `dict` to both HDF5 and JSON using the same basename in `path_dir`.
+Files are written as `<file_basename>.h5` and `<file_basename>.json`.
+"""
 function save_dict_to_h5_json(
     path_dir::AbstractString,
     file_basename::AbstractString,
@@ -79,6 +114,13 @@ function save_dict_to_h5_json(
     nothing
 end
 
+"""
+    download_file(url_download, path_save; checksum=nothing, f_checksum=md5sum, verbose=true, headers=Pair{String,String}[])
+
+Download a file to `path_save`. If `checksum` is provided, verify it with
+`f_checksum` and throw an error on mismatch. Existing files are reused when
+the checksum already matches.
+"""
 function download_file(
     url_download::AbstractString,
     path_save::AbstractString;
@@ -123,6 +165,12 @@ function download_file(
 end
 
 
+"""
+    unarchive(path_archive, path_target=nothing, verbose=false)
+
+Extract supported archives (`.tar.bz2` and `.bz2`). For `.tar.bz2`, extraction
+can be redirected to `path_target`.
+"""
 function unarchive(
     path_archive::AbstractString,
     path_target::Union{AbstractString,Nothing} = nothing,
@@ -145,8 +193,24 @@ function unarchive(
     nothing
 end
 
+"""
+    sha256(path_file)
+
+Return the SHA-256 checksum of `path_file` as a lowercase hex string.
+"""
 sha256(path_file::AbstractString) = split(read(`shasum -a 256 $(path_file)`, String))[1]
 
+"""
+    blake3(path_file)
+
+Return the BLAKE3 checksum of `path_file` as a lowercase hex string.
+Requires `b3sum` to be available in `PATH`.
+"""
 blake3(path_file::AbstractString) = split(read(`b3sum $(path_file)`, String))[1]
 
+"""
+    md5sum(path_file)
+
+Return the MD5 checksum of `path_file` as a lowercase hex string.
+"""
 md5sum(path_file::AbstractString) = split(read(`md5sum $(path_file)`, String))[1]

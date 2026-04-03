@@ -1,3 +1,8 @@
+"""
+    get_dryad_token(client_id, client_secret)
+
+Request an OAuth access token from Dryad using client credentials.
+"""
 function get_dryad_token(client_id::AbstractString, client_secret::AbstractString)
     url = "https://datadryad.org/oauth/token"
     body = Dict(
@@ -11,6 +16,12 @@ function get_dryad_token(client_id::AbstractString, client_secret::AbstractStrin
     return response["access_token"]
 end
 
+"""
+    get_dryad_files_metadata(doi)
+
+Resolve a Dryad DOI to its latest dataset version and return the associated
+file metadata list.
+"""
 function get_dryad_files_metadata(doi::AbstractString)
     # 1. normalize and Encode DOI
     clean_doi = startswith(doi, "doi:") ? doi : "doi:$doi"
@@ -48,6 +59,12 @@ function get_dryad_files_metadata(doi::AbstractString)
     end
 end
 
+"""
+    _select_dryad_file_record(records, filename)
+
+Internal helper that selects a Dryad file record whose `path` matches
+`filename`.
+"""
 function _select_dryad_file_record(records::Vector, filename::AbstractString)
     for record in records
         if record["path"] == filename
@@ -58,6 +75,12 @@ function _select_dryad_file_record(records::Vector, filename::AbstractString)
     error("file $filename not found in the given records")
 end
 
+"""
+    get_dryad_file(file_records, filename, path_dir_target, path_dir_unarchive=nothing; verbose=true, token)
+
+Download one file from Dryad metadata records using bearer-token authentication,
+verify checksum, and optionally unarchive `.bz2` outputs.
+"""
 function get_dryad_file(
     file_records::Vector,
     filename::AbstractString,
@@ -92,6 +115,12 @@ function get_dryad_file(
     end
 end
 
+"""
+    prepare_files_dryad(doi, path_dir_target; token, neuropal_label=false, encoding_data=false, verbose=true)
+
+Download the required file bundle for a Dryad-backed paper into
+`path_dir_target`.
+"""
 function prepare_files_dryad(
     doi::AbstractString,
     path_dir_target::AbstractString;

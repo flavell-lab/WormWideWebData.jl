@@ -1,3 +1,9 @@
+"""
+    neuron_behavior_correlation(trace_array, behavior, threshold=0.5)
+
+Count neurons whose Pearson correlation with `behavior` is greater than
+`threshold`.
+"""
 function neuron_behavior_correlation(
     trace_array::AbstractMatrix,
     behavior::AbstractVector,
@@ -15,6 +21,13 @@ function neuron_behavior_correlation(
     return n_cor
 end
 
+"""
+    check_h5_data_integrity(path_h5; check_velocity_cor=false, check_velocity_cor_threshold=0.3, check_velocity_cor_count=10)
+
+Validate expected structure and normalization properties of a dataset HDF5 file.
+Optional velocity-correlation checks can enforce a minimum number of correlated
+neurons.
+"""
 function check_h5_data_integrity(
     path_h5::AbstractString;
     check_velocity_cor::Bool = false,
@@ -71,6 +84,12 @@ function check_h5_data_integrity(
     nothing
 end
 
+"""
+    check_paper_h5_datasets(datasets, path_dir_datasets; verbose=false)
+
+For each dataset entry, verify file existence, checksum integrity, and HDF5
+content validity via `check_h5_data_integrity`.
+"""
 function check_paper_h5_datasets(
     datasets::Vector{<:Dict},
     path_dir_datasets::AbstractString;

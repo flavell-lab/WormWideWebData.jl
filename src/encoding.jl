@@ -1,3 +1,9 @@
+"""
+    generate_encoding_files(path_dir_target, path_analysis_dict, path_fit_results, path_relative_encoding_strength; verbose=true)
+
+Build standardized encoding artifacts from source JLD2 files and save them as
+paired HDF5/JSON files in `path_dir_target`.
+"""
 function generate_encoding_files(
     path_dir_target::String,
     path_analysis_dict::String,
@@ -126,6 +132,12 @@ function generate_encoding_files(
     nothing
 end
 
+"""
+    _get_median_tuning_strength(ranges_encoding, idx_neuron, key, tuning_strength)
+
+Internal helper that computes a median tuning-strength scalar for one neuron
+across selected encoding ranges.
+"""
 function _get_median_tuning_strength(
     ranges_encoding::Vector{Int},
     idx_neuron::Int,
@@ -141,6 +153,12 @@ function _get_median_tuning_strength(
     )
 end
 
+"""
+    get_encoding_dictionary(neuron_categorization, encoding_changes_corrected, tuning_strength, sampled_tau_vals_median, fit_ranges, relative_encoding_strength_median)
+
+Construct the per-dataset encoding summary dictionary consumed by downstream
+JSON generation.
+"""
 function get_encoding_dictionary(
     neuron_categorization,
     encoding_changes_corrected,
