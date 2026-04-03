@@ -163,16 +163,16 @@ function generate_paper_datasets_json(
         dict_encoding =
             encoding_data ?
             WormWideWebData.get_encoding_dictionary(
-                neuron_categorization[uid],
-                encoding_changes_corrected[uid],
-                tuning_strength[uid],
-                sampled_tau_vals_median[uid],
-                fit_ranges[uid],
-                relative_encoding_strength_median[uid],
+                neuron_categorization.data[uid],
+                encoding_changes_corrected.data[uid],
+                tuning_strength.data[uid],
+                sampled_tau_vals_median.data[uid],
+                fit_ranges.data[uid],
+                relative_encoding_strength_median.data[uid],
             ) : nothing
         dict_label =
-            neuropal_label && haskey(neuropal_data, uid) ?
-            neuropal_data[uid]["roi_to_neuron"] : nothing
+            neuropal_label && haskey(neuropal_data.data, uid) ?
+            neuropal_data.data[uid]["roi_to_neuron"] : nothing
 
         # generate output dict
         dict_output = get_dataset_dict(
@@ -186,6 +186,23 @@ function generate_paper_datasets_json(
             source_filename = dataset["filename"],
             paper_id = paper_id,
         )
+        if encoding_data
+            for stored_data in [
+                neuron_categorization,
+                encoding_changes_corrected,
+                relative_encoding_strength_median,
+                tuning_strength,
+                sampled_tau_vals_median,
+                fit_ranges,
+            ]
+                checksum_k, checksum_v = _get_stored_checksum(stored_data.metadata)
+                dict_output["metadata"][checksum_k] = checksum_v
+            end
+        end
+        if neuropal_label
+            checksum_k, checksum_v = _get_stored_checksum(neuropal_data.metadata)
+            dict_output["metadata"][checksum_k] = checksum_v
+        end
 
         # write to json
         path_json = joinpath(path_dir_json, "$(paper_id)_$(uid).json")
