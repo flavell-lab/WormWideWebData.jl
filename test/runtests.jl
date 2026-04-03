@@ -2,6 +2,9 @@ using Test
 using WormWideWebData
 using HTTP
 using Sockets
+using HDF5
+using JLD2
+using JSON
 
 function with_local_http_server(f::Function, handler::Function)
     server = HTTP.serve!(handler, ip"127.0.0.1", 0; verbose = false)
@@ -16,11 +19,57 @@ function with_local_http_server(f::Function, handler::Function)
     end
 end
 
+function write_core_fixture_h5(path_h5::AbstractString)
+    a = sqrt(0.5)
+    h5open(path_h5, "w") do file
+        timing = create_group(file, "timing")
+        timing["timestamp_confocal"] = [0.0, 1.0]
+
+        behavior = create_group(file, "behavior")
+        behavior["angular_velocity"] = [0.25, -0.25]
+        behavior["head_angle"] = [0.5, -0.5]
+        behavior["velocity"] = [-1.0, 1.0]
+        behavior["reversal_events"] = [0, 1]
+
+        gcamp = create_group(file, "gcamp")
+        gcamp["trace_array"] = [-a a; a -a]
+        gcamp["trace_array_original"] = [10.0 11.0; 12.0 13.0]
+    end
+
+    return path_h5
+end
+
+function with_fake_b3sum(f::Function)
+    mktempdir() do bindir
+        path_b3sum = joinpath(bindir, "b3sum")
+        open(path_b3sum, "w") do io
+            write(io, "#!/bin/sh\n")
+            write(io, string("shasum -a 256 \"", '$', "1\"\n"))
+        end
+        chmod(path_b3sum, 0o755)
+
+        path_original = get(ENV, "PATH", "")
+        ENV["PATH"] = string(bindir, ":", path_original)
+        try
+            return f()
+        finally
+            ENV["PATH"] = path_original
+        end
+    end
+end
+
 @testset "WormWideWebData" begin
     @testset "compute_mean_timestep" begin
         ts = [0.0, 1.0, 2.0, 10.0, 11.0]
         @test WormWideWebData.compute_mean_timestep(ts) == 1.0
         @test_throws AssertionError WormWideWebData.compute_mean_timestep(ts, 0)
+    end
+
+    @testset "parse_event_str" begin
+        @test WormWideWebData.parse_event_str("stim=[1,2],rev=[3]") ==
+              [["stim", 1], ["stim", 2], ["rev", 3]]
+        @test WormWideWebData.parse_event_str("stim=[ ],rev=[4]") == [["rev", 4]]
+        @test WormWideWebData.parse_event_str("no events here") == []
     end
 
     @testset "save/load dict helpers" begin
@@ -56,6 +105,84 @@ end
                 Dict("x" => NaN);
                 allow_nan = false,
             )
+
+            @test_throws ErrorException WormWideWebData.unarchive(
+                joinpath(tmp, "unsupported.zip"),
+            )
+        end
+    end
+
+    @testset "dataset dict and integrity checks" begin
+        mktempdir() do tmp
+            path_h5 = write_core_fixture_h5(joinpath(tmp, "dataset.h5"))
+
+            dict_output = WormWideWebData.get_dataset_dict(
+                path_h5;
+                θh_pos_is_ventral = true,
+                h5_checksum = "abc123",
+                source_filename = "dataset.h5",
+                paper_id = "paper-a",
+                dataset_type = ["calcium", "behavior"],
+                dict_encoding = Dict("score" => 42),
+                dict_label = Dict("R1" => "AVA"),
+                events_str = "stim=[1,2],rev=[3]",
+            )
+
+            @test dict_output["metadata"]["checksum"] == "abc123"
+            @test dict_output["metadata"]["source_filename"] == "dataset.h5"
+            @test dict_output["metadata"]["paper_id"] == "paper-a"
+            @test dict_output["dataset_type"] == ["calcium", "behavior"]
+            @test dict_output["timing"]["mean_timestep"] == 1.0
+            @test dict_output["timing"]["max_t"] == 2
+            @test dict_output["timing"]["event"] == [["stim", 1], ["stim", 2], ["rev", 3]]
+            @test dict_output["behavior"]["head_angle"] == [-0.5, 0.5]
+            @test dict_output["behavior"]["angular_velocity"] == [-0.25, 0.25]
+            @test dict_output["gcamp"]["trace_array_original"] == [10.0 11.0; 12.0 13.0]
+            @test dict_output["encoding"]["score"] == 42
+            @test dict_output["label"]["R1"] == "AVA"
+
+            trace_array = [1.0 2.0 3.0; 3.0 2.0 1.0]
+            behavior = [1.0, 2.0, 3.0]
+            @test WormWideWebData.neuron_behavior_correlation(trace_array, behavior, 0.5) ==
+                  1
+
+            @test isnothing(WormWideWebData.check_h5_data_integrity(path_h5))
+            @test isnothing(
+                WormWideWebData.check_h5_data_integrity(
+                    path_h5;
+                    check_velocity_cor = true,
+                    check_velocity_cor_threshold = 0.9,
+                    check_velocity_cor_count = 1,
+                ),
+            )
+            @test_throws AssertionError WormWideWebData.check_h5_data_integrity(
+                path_h5;
+                check_velocity_cor = true,
+                check_velocity_cor_threshold = 0.9,
+                check_velocity_cor_count = 2,
+            )
+
+            good_checksum = WormWideWebData.sha256(path_h5)
+            datasets = [
+                Dict(
+                    "uid" => "uid-1",
+                    "filename" => "dataset.h5",
+                    "checksum" => good_checksum,
+                ),
+            ]
+            @test isnothing(WormWideWebData.check_paper_h5_datasets(datasets, tmp))
+
+            bad_datasets = [
+                Dict(
+                    "uid" => "uid-1",
+                    "filename" => "dataset.h5",
+                    "checksum" => "bad-checksum",
+                ),
+            ]
+            @test_throws AssertionError WormWideWebData.check_paper_h5_datasets(
+                bad_datasets,
+                tmp,
+            )
         end
     end
 
@@ -89,6 +216,17 @@ end
                     verbose = false,
                 )
                 @test read(path_save, String) == "open-data"
+            end
+
+            with_local_http_server(req -> HTTP.Response(200, "bad-data")) do base_url
+                path_save = joinpath(tmp, "bad.bin")
+                @test_throws ErrorException WormWideWebData.download_file(
+                    "$base_url/bad",
+                    path_save;
+                    verbose = false,
+                    checksum = "expected-good-data",
+                    f_checksum = path -> read(path, String),
+                )
             end
         end
     end
@@ -176,5 +314,36 @@ end
         @test output["feedingness"] ≈ [0.2, 0.0]
         @test output["rel_enc_str_v"] ≈ [0.3, 0.8]
         @test sort(output["encoding_changing_neurons"]) == [1, 2]
+    end
+
+    @testset "label generation" begin
+        mktempdir() do tmp
+            with_fake_b3sum() do
+                path_neuropal_dict = joinpath(tmp, "neuropal.jld2")
+                jldopen(path_neuropal_dict, "w") do file
+                    file["dict_neuropal_label"] =
+                        Dict("uid-1" => (Dict("roi1" => "AVA"), Dict("AVA" => "roi1")))
+                end
+
+                path_json = WormWideWebData.generate_neuropal_json(
+                    tmp,
+                    path_neuropal_dict,
+                    false;
+                    json_name = "neuropal.json",
+                )
+                parsed = JSON.parsefile(path_json, dicttype = Dict)
+                @test parsed["data"]["uid-1"]["roi_to_neuron"]["roi1"] == "AVA"
+                @test parsed["data"]["uid-1"]["neuron_to_roi"]["AVA"] == "roi1"
+                @test haskey(parsed["metadata"], "blake_neuropal_dict")
+
+                @test_throws ErrorException WormWideWebData.generate_neuropal_json(
+                    tmp,
+                    path_neuropal_dict,
+                    false;
+                    json_name = "neuropal.json",
+                    overwrite = false,
+                )
+            end
+        end
     end
 end
