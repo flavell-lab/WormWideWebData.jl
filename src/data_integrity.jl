@@ -114,3 +114,51 @@ function check_paper_h5_datasets(
 
     nothing
 end
+
+function get_file_checksums(
+    path_dir::AbstractString;
+    ext::Union{Nothing,AbstractString} = nothing,
+    f_checksum::Function = WormWideWebData.sha256,
+)
+    target_ext = isnothing(ext) ? nothing : lowercase(ext)
+
+    files = filter(readdir(path_dir; join = true)) do path
+        isfile(path) && (isnothing(target_ext) || endswith(lowercase(path), target_ext))
+    end
+    sort!(files)
+
+    data = []
+    for file in files
+        path_f = joinpath(path_dir, file)
+        hash = f_checksum(path_f)
+
+        push!(data, (filename = basename(file), checksum = hash))
+    end
+
+    return data
+end
+
+function write_file_checksums_to_csv(
+    path_dir::AbstractString,
+    path_csv::AbstractString;
+    ext::Union{Nothing,AbstractString} = nothing,
+    f_checksum::Function = WormWideWebData.sha256,
+    header::Bool = false,
+)
+    hashes = get_file_checksums(path_dir, ext = ext, f_checksum = f_checksum)
+
+    open(path_csv, "w") do io
+        if header
+
+            write(io, "filename,$(string(f_checksum))\n")
+        end
+
+        for row in hashes
+            filename = String(row.filename)
+            checksum = String(row.checksum)
+            write(io, filename, ",", checksum, "\n")
+        end
+    end
+
+    return path_csv
+end
