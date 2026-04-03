@@ -60,7 +60,7 @@ function get_dataset_dict(
 
     out_ = Dict()
     out_["metadata"] = Dict(
-        "checksum"=>h5_checksum,
+        "checksum_h5"=>h5_checksum,
         "source_filename"=>source_filename,
         "paper_id"=>paper_id,
     )
