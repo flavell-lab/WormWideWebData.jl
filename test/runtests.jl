@@ -186,6 +186,60 @@ end
         end
     end
 
+    @testset "file checksum helpers" begin
+        mktempdir() do tmp
+            write(joinpath(tmp, "b.txt"), "bbb")
+            write(joinpath(tmp, "a.txt"), "aaa")
+            write(joinpath(tmp, "c.dat"), "ccc")
+
+            txt_hashes = WormWideWebData.get_file_checksums(
+                tmp;
+                ext = ".TXT",
+                f_checksum = path -> read(path, String),
+            )
+            @test [row.filename for row in txt_hashes] == ["a.txt", "b.txt"]
+            @test [row.checksum for row in txt_hashes] == ["aaa", "bbb"]
+
+            all_hashes = WormWideWebData.get_file_checksums(
+                tmp;
+                f_checksum = path -> read(path, String),
+            )
+            @test [row.filename for row in all_hashes] == ["a.txt", "b.txt", "c.dat"]
+            @test [row.checksum for row in all_hashes] == ["aaa", "bbb", "ccc"]
+
+            path_csv_header = joinpath(tmp, "checksums_with_header.csv")
+            out_header = WormWideWebData.write_file_checksums_to_csv(
+                tmp,
+                path_csv_header;
+                ext = ".txt",
+                f_checksum = WormWideWebData.sha256,
+                header = true,
+            )
+            @test out_header == path_csv_header
+
+            txt_hashes_sha = WormWideWebData.get_file_checksums(
+                tmp;
+                ext = ".txt",
+                f_checksum = WormWideWebData.sha256,
+            )
+            expected_lines = ["$(row.filename),$(row.checksum)" for row in txt_hashes_sha]
+            lines_header = readlines(path_csv_header)
+            @test lines_header[1] == "filename,sha256"
+            @test lines_header[2:end] == expected_lines
+
+            path_csv_no_header = joinpath(tmp, "checksums_no_header.csv")
+            out_no_header = WormWideWebData.write_file_checksums_to_csv(
+                tmp,
+                path_csv_no_header;
+                ext = ".txt",
+                f_checksum = WormWideWebData.sha256,
+                header = false,
+            )
+            @test out_no_header == path_csv_no_header
+            @test readlines(path_csv_no_header) == expected_lines
+        end
+    end
+
     @testset "download_file" begin
         mktempdir() do tmp
             with_local_http_server(
