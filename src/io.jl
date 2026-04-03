@@ -51,8 +51,17 @@ structure.
 """
 function load_dict_from_h5(path_h5::AbstractString)
     h5open(path_h5, "r") do file
-        return read(file, "data")
+        return (data = read(file, "data"), metadata = read(file, "metadata"))
     end
+end
+
+function _get_stored_checksum(metadata::Dict)
+    for (k, v) in metadata
+        if startswith(k, "blake") || startswith(k, "sha256")
+            return k, v
+        end
+    end
+    error("no blake3 or sha256 checksum found in the metadata dictionary")
 end
 
 """
@@ -61,7 +70,8 @@ end
 Parse a JSON file and return the value stored in its top-level `"data"` field.
 """
 function load_dict_from_json(path_json::AbstractString)
-    JSON.parsefile(path_json, dicttype = Dict)["data"]
+    json = JSON.parsefile(path_json, dicttype = Dict)
+    return (data = json["data"], metadata = json["metadata"])
 end
 
 """
