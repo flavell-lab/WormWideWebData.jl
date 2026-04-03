@@ -7,14 +7,19 @@ function compute_mean_timestep(timestamp_confocal::Vector, max_segment_gap::Int 
 end
 
 function parse_event_str(str::AbstractString)
-    list_event = []
-    collections_str = split(str, "],")
-    for events_str in collections_str
-        event_name, idx_str = split(events_str, "=")
-        for t in parse.(Int, split(idx_str[2:(end-1)], ","))
-            push!(list_event, [event_name, t])
+    list_event = Vector{Vector{Any}}()
+    for m in eachmatch(r"([^=,\s]+)\s*=\s*\[([^\]]*)\]", str)
+        event_name = strip(m.captures[1])
+        idx_values = strip(m.captures[2])
+        isempty(idx_values) && continue
+
+        for idx_str in split(idx_values, ',')
+            idx_clean = strip(idx_str)
+            isempty(idx_clean) && continue
+            push!(list_event, Any[event_name, parse(Int, idx_clean)])
         end
     end
+
     return list_event
 end
 
