@@ -46,6 +46,26 @@ generate_all_paper_json(
 )
 ```
 
+## Generated JSON files
+### metadata
+Each file should contain a metadata entry:
+```
+  "checksum_h5"                       => "99b5975ddea434e5e03510ac380d89ac8d7d4…
+  "blake3_relative_encoding_strength" => "c28384748008c66b4178cc3afaa909263f4d4…
+  "blake3_neuropal_dict"              => "88d19fddf57f3469fa4bd4cf917742d26e6c8…
+  "blake3_analysis_dict"              => "b6e66580cfae784a81e5a9fcc757eaeec88e6…
+  "blake3_fit_results"                => "1c4bf00c535d814e851a03170542fc3008295…
+  "source_filename"                   => "2021-08-17-01-data.h5"
+  "paper_id"                          => "atanas_kim_2023"
+  ```
+  - blake3_relative_encoding_strength: blake3 checksum of the relative_encoding_strength.jld2
+  - blake3_neuropal_dict: blake3 checksum of the neuropal dictionary file used
+  - blake3_analysis_dict: blake3 checksum of the analysis_dict.jld2
+  - blake3_fit_results: blake3 checksum of the fit_results.jld2
+  - source_filename: filename of the raw neural/behavioral h5 file used
+  - checksum_h5: sha256 checksum of the h5 source file
+  - paper_id: paper id
+
 ## Running Tests
 
 ```bash
