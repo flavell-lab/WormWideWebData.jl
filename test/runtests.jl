@@ -128,7 +128,7 @@ end
                 events_str = "stim=[1,2],rev=[3]",
             )
 
-            @test dict_output["metadata"]["checksum"] == "abc123"
+            @test dict_output["metadata"]["checksum_h5"] == "abc123"
             @test dict_output["metadata"]["source_filename"] == "dataset.h5"
             @test dict_output["metadata"]["paper_id"] == "paper-a"
             @test dict_output["dataset_type"] == ["calcium", "behavior"]
