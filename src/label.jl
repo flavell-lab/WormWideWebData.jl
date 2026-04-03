@@ -31,7 +31,7 @@ function generate_neuropal_json(
     save_dict_to_json(
         path_save,
         neuropal_label_compiled,
-        metadata = Dict("blake_neuropal_dict"=>blake_neuropal_dict),
+        metadata = Dict("blake3_neuropal_dict"=>blake_neuropal_dict),
     )
 
     verbose && @info "neuropal dict saving complete: $path_save"
