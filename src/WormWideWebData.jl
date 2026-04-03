@@ -22,8 +22,7 @@ include("label.jl")
 include("encoding.jl")
 include("data_integrity.jl")
 include("reference.jl")
-include("api/zenodo.jl")
-include("api/dryad.jl")
+include("api/api.jl")
 include("data_generator.jl")
 
 # encoding.jl
