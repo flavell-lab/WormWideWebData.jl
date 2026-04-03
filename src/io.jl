@@ -108,14 +108,18 @@ function download_file(
         update!(p, 100)
         finish!(p)
     else
-        Downloads.download(url_download, path_save)
+        Downloads.download(url_download, path_save, headers = headers)
     end
 
-    if !isnothing(checksum) && f_checksum(path_save) == checksum
+    if isnothing(checksum)
         return
-    else
-        error("file downloaded but checksum is incorrect")
     end
+
+    if f_checksum(path_save) == checksum
+        return
+    end
+
+    error("file downloaded but checksum is incorrect")
 end
 
 
