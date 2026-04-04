@@ -67,9 +67,9 @@ end
 
     @testset "parse_event_str" begin
         @test WormWideWebData.parse_event_str("stim=[1,2],rev=[3]") ==
-              [["stim", 1], ["stim", 2], ["rev", 3]]
-        @test WormWideWebData.parse_event_str("stim=[ ],rev=[4]") == [["rev", 4]]
-        @test WormWideWebData.parse_event_str("no events here") == []
+              Dict("stim" => [1, 2], "rev" => [3])
+        @test WormWideWebData.parse_event_str("stim=[ ],rev=[4]") == Dict("rev" => [4])
+        @test WormWideWebData.parse_event_str("no events here") == Dict{String,Vector{Int}}()
     end
 
     @testset "save/load dict helpers" begin
@@ -136,7 +136,7 @@ end
             @test dict_output["metadata"]["dataset_type"] == ["calcium", "behavior"]
             @test dict_output["timing"]["mean_timestep"] == 1.0
             @test dict_output["timing"]["max_t"] == 2
-            @test dict_output["timing"]["event"] == [["stim", 1], ["stim", 2], ["rev", 3]]
+            @test dict_output["timing"]["event"] == Dict("stim" => [1, 2], "rev" => [3])
             @test dict_output["behavior"]["head_angle"] == [-0.5, 0.5]
             @test dict_output["behavior"]["angular_velocity"] == [-0.25, 0.25]
             @test dict_output["gcamp"]["trace_array_original"] == [10.0 12.0; 11.0 13.0]
