@@ -38,3 +38,32 @@ function generate_neuropal_json(
 
     return path_save
 end
+
+function check_labels(dict_label::Dict)
+    output_dict = Dict{String,Dict}()
+    for (idx_neuron_str, label_data) in dict_label
+        if label_data isa Dict
+            output_dict[idx_neuron_str] = label_data
+        elseif label_data isa Vector
+            # check for multiple labels
+            n_label_data = length(label_data)
+            if n_label_data == 0
+                # skip, no data
+            elseif n_label_data == 1
+                # use the single label
+                output_dict[idx_neuron_str] = label_data[1]
+            else
+                # multiple label, pick the highest confidence one
+                output_dict[idx_neuron_str] = pop!(label_data)
+                while length(label_data) > 0
+                    candidate_ = pop!(label_data)
+                    if candidate_["confidence"] > output_dict[idx_neuron_str]["confidence"]
+                        output_dict[idx_neuron_str] = candidate_
+                    end
+                end
+            end
+        end
+    end
+
+    return output_dict
+end
