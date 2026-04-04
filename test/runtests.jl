@@ -121,25 +121,27 @@ end
                 θh_pos_is_ventral = true,
                 h5_checksum = "abc123",
                 source_filename = "dataset.h5",
+                uid = "uid-1",
                 paper_id = "paper-a",
                 dataset_type = ["calcium", "behavior"],
                 dict_encoding = Dict("score" => 42),
-                dict_label = Dict("R1" => "AVA"),
+                dict_label = Dict("R1" => Dict("label" => "AVA")),
                 events_str = "stim=[1,2],rev=[3]",
             )
 
             @test dict_output["metadata"]["checksum_h5"] == "abc123"
             @test dict_output["metadata"]["source_filename"] == "dataset.h5"
             @test dict_output["metadata"]["paper_id"] == "paper-a"
-            @test dict_output["dataset_type"] == ["calcium", "behavior"]
+            @test dict_output["metadata"]["uid"] == "uid-1"
+            @test dict_output["metadata"]["dataset_type"] == ["calcium", "behavior"]
             @test dict_output["timing"]["mean_timestep"] == 1.0
             @test dict_output["timing"]["max_t"] == 2
             @test dict_output["timing"]["event"] == [["stim", 1], ["stim", 2], ["rev", 3]]
             @test dict_output["behavior"]["head_angle"] == [-0.5, 0.5]
             @test dict_output["behavior"]["angular_velocity"] == [-0.25, 0.25]
-            @test dict_output["gcamp"]["trace_array_original"] == [10.0 11.0; 12.0 13.0]
+            @test dict_output["gcamp"]["trace_array_original"] == [10.0 12.0; 11.0 13.0]
             @test dict_output["encoding"]["score"] == 42
-            @test dict_output["label"]["R1"] == "AVA"
+            @test dict_output["label"]["R1"]["label"] == "AVA"
 
             trace_array = [1.0 2.0 3.0; 3.0 2.0 1.0]
             behavior = [1.0, 2.0, 3.0]
