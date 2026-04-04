@@ -90,13 +90,14 @@ function get_dataset_dict(
     # behavior
     out_["behavior"] = Dict(
         b=>behavior[b] for
-        b in ["angular_velocity", "head_angle", "velocity", "reversal_events"]
+        b in ["angular_velocity", "head_angle", "velocity"]
     )
     out_["behavior"]["head_angle"] .*= dv_correction
     out_["behavior"]["angular_velocity"] .*= dv_correction
     if haskey(behavior, "pumping")
          out_["behavior"]["pumping"] = behavior["pumping"]
     end
+    out_["behavior"]["reversal_events"] = behavior["reversal_events"]' # tranpose for json
 
     # gcamp
     out_["gcamp"] = Dict("trace_array"=>gcamp["trace_array"]') # must
