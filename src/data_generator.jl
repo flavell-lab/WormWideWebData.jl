@@ -46,6 +46,7 @@ function get_dataset_dict(
     θh_pos_is_ventral::Bool,
     h5_checksum::AbstractString,
     source_filename::AbstractString,
+    uid::AbstractString,
     paper_id::AbstractString,
     dataset_type::Vector{<:AbstractString},
     dict_encoding::Union{Dict,Nothing} = nothing,
@@ -63,8 +64,9 @@ function get_dataset_dict(
         "checksum_h5"=>h5_checksum,
         "source_filename"=>source_filename,
         "paper_id"=>paper_id,
+        "uid"=>uid,
+        "dataset_type"=>dataset_type,
     )
-    out_["dataset_type"] = dataset_type
 
     if !isnothing(dict_encoding)
         out_["encoding"] = dict_encoding
@@ -185,6 +187,7 @@ function generate_paper_datasets_json(
             h5_checksum = dataset["checksum"],
             source_filename = dataset["filename"],
             paper_id = paper_id,
+            uid = uid,
         )
         if encoding_data
             for stored_data in [
