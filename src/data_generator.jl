@@ -97,7 +97,7 @@ function get_dataset_dict(
     if haskey(behavior, "pumping")
          out_["behavior"]["pumping"] = behavior["pumping"]
     end
-    out_["behavior"]["reversal_events"] = behavior["reversal_events"]' # tranpose for json
+    out_["behavior"]["reversal_events"] = hcat(behavior["reversal_events"]...) # effectively, tranpose for json
 
     # gcamp
     out_["gcamp"] = Dict("trace_array"=>gcamp["trace_array"]') # must
