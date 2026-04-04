@@ -3,7 +3,9 @@ function generate_download_manifest(
     encoding_data::Bool = false,
     neuropal_label::Bool = false,
 )
-    manifest = [("processed_h5.tar.bz2", joinpath(path_dir_target, "datasets")),]
+    manifest = Tuple{String,Union{String,Nothing}}[
+        ("processed_h5.tar.bz2", joinpath(path_dir_target, "datasets")),
+    ]
 
     if encoding_data
         manifest = vcat(
