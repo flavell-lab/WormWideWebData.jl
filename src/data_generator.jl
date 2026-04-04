@@ -95,10 +95,10 @@ function get_dataset_dict(
     out_["behavior"]["angular_velocity"] .*= dv_correction
 
     # gcamp
-    out_["gcamp"] = Dict("trace_array"=>gcamp["trace_array"]) # must
+    out_["gcamp"] = Dict("trace_array"=>gcamp["trace_array"]') # must
     for k in ["trace_array_original"]
         if haskey(gcamp, k)
-            out_["gcamp"][k] = gcamp[k]
+            out_["gcamp"][k] = gcamp[k]'
         end
     end
 
