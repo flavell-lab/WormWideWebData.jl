@@ -1,4 +1,5 @@
 # WormWideWebData.jl
+[![CI](https://github.com/flavell-lab/WormWideWebData.jl/actions/workflows/ci.yml/badge.svg)](https://github.com/flavell-lab/WormWideWebData.jl/actions/workflows/ci.yml)
 
 `WormWideWebData.jl` provides tools to:
 
