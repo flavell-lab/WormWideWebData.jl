@@ -73,7 +73,7 @@ function get_dataset_dict(
         out_["encoding"] = dict_encoding
     end
     if !isnothing(dict_label)
-        out_["label"] = dict_label
+        out_["label"] = check_labels(dict_label)
     end
 
     # timing
