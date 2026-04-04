@@ -87,8 +87,8 @@ function get_activity_info(
     scratch_dir::AbstractString = REFERENCE_SCRATCH_DIR,
 )
     path_dir_activity = sync_repo_sparse(repo_url, repo_activity_path, scratch_dir)
-    path_json_paper = joinpath(path_dir_activity, "initial_data_activity_papers.json")
-    path_json_type = joinpath(path_dir_activity, "initial_data_activity_dataset_types.json")
+    path_json_paper = joinpath(path_dir_activity, "papers.json")
+    path_json_type = joinpath(path_dir_activity, "dataset_types.json")
 
     # get paper_id list
     papers_data = JSON.parsefile(path_json_paper, dicttype = Dict)
