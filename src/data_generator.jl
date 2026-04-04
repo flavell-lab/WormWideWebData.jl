@@ -19,7 +19,7 @@ Parse an event string formatted like `"event=[1,2],other=[3]"` into a vector
 of `[event_name, index]` pairs.
 """
 function parse_event_str(str::AbstractString)
-    list_event = Vector{Vector{Any}}()
+    event_dict = Dict{String,Vector{Int}}()
     for m in eachmatch(r"([^=,\s]+)\s*=\s*\[([^\]]*)\]", str)
         event_name = strip(m.captures[1])
         idx_values = strip(m.captures[2])
@@ -28,7 +28,8 @@ function parse_event_str(str::AbstractString)
         for idx_str in split(idx_values, ',')
             idx_clean = strip(idx_str)
             isempty(idx_clean) && continue
-            push!(list_event, Any[event_name, parse(Int, idx_clean)])
+            
+            push!(get!(event_dict, event_name, Int[]), parse(Int, idx_clean))
         end
     end
 
@@ -93,6 +94,9 @@ function get_dataset_dict(
     )
     out_["behavior"]["head_angle"] .*= dv_correction
     out_["behavior"]["angular_velocity"] .*= dv_correction
+    if haskey(behavior, "pumping")
+         out_["behavior"]["pumping"] = behavior["pumping"]
+    end
 
     # gcamp
     out_["gcamp"] = Dict("trace_array"=>gcamp["trace_array"]') # must
