@@ -33,7 +33,7 @@ function parse_event_str(str::AbstractString)
         end
     end
 
-    return list_event
+    return event_dict
 end
 
 """
