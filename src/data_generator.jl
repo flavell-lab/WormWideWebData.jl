@@ -66,6 +66,7 @@ function get_dataset_dict(
         "paper_id"=>paper_id,
         "uid"=>uid,
         "dataset_type"=>dataset_type,
+        "n_neuron"=>size(gcamp["trace_array"], 1),
     )
 
     if !isnothing(dict_encoding)
