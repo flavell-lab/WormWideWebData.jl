@@ -388,8 +388,8 @@ end
                     json_name = "neuropal.json",
                 )
                 parsed = JSON.parsefile(path_json, dicttype = Dict)
-                @test parsed["data"]["uid-1"]["roi_to_neuron"]["roi1"] == "AVA"
-                @test parsed["data"]["uid-1"]["neuron_to_roi"]["AVA"] == "roi1"
+                @test parsed["data"]["uid-1"]["idx_neuron-label"]["roi1"] == "AVA"
+                @test parsed["data"]["uid-1"]["label-idx_neuron"]["AVA"] == "roi1"
                 @test haskey(parsed["metadata"], "blake3_neuropal_dict")
 
                 @test_throws ErrorException WormWideWebData.generate_neuropal_json(

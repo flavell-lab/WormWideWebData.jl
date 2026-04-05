@@ -180,7 +180,7 @@ function generate_paper_datasets_json(
             ) : nothing
         dict_label =
             neuropal_label && haskey(neuropal_data.data, uid) ?
-            neuropal_data.data[uid]["roi_to_neuron"] : nothing
+            neuropal_data.data[uid]["idx_neuron-label"] : nothing
 
         # generate output dict
         dict_output = get_dataset_dict(
