@@ -22,11 +22,7 @@ Or add from a remote git URL if this repository is hosted.
 ## Quick Start
 ### Reference data
 The data sources are defined in `activity/papers.json` of https://github.com/flavell-lab/WormWideWeb-data  
-Enter zenodo record id or dyard doi accordingly, e.g.
-```json
-{"paper_id": "atanas_kim_2023", "title_full": "Brain-wide representations of behavior spanning multiple timescales and states in C. elegans", "title_short": "Atanas & Kim et al., 2023", "neuropal_label": true, "encoding_data": true, "repository": {"type": "zenodo", "record_id": "19388374"}}
-```
-See the `WormWideWeb-data` repo for more information.
+See the `WormWideWeb-data` repo for more information on how to add new papers/datasets.
 
 
 ### Generating encoding and neuropal files
