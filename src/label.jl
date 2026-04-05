@@ -25,7 +25,7 @@ function generate_neuropal_json(
 
     neuropal_label_compiled = Dict()
     for (uid, d) in dict_neuropal_label
-        neuropal_label_compiled[uid] = Dict("idx_neuron-label"=>d[1], "label-idx_neuron"=>d[2])
+        neuropal_label_compiled[uid] = Dict("idx_neuron-label"=>d[1])
     end
 
     save_dict_to_json(
