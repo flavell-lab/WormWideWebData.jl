@@ -20,6 +20,15 @@ Pkg.develop(path=".")
 Or add from a remote git URL if this repository is hosted.
 
 ## Quick Start
+### Reference data
+The data sources are defined in `activity/papers.json` of https://github.com/flavell-lab/WormWideWeb-data  
+Enter zenodo record id or dyard doi accordingly, e.g.
+```json
+{"paper_id": "atanas_kim_2023", "title_full": "Brain-wide representations of behavior spanning multiple timescales and states in C. elegans", "title_short": "Atanas & Kim et al., 2023", "neuropal_label": true, "encoding_data": true, "repository": {"type": "zenodo", "record_id": "19388374"}}
+```
+See the `WormWideWeb-data` repo for more information.
+
+
 ### Generating encoding and neuropal files
 See below to generate encoding data files (derived from analysis_dict.jld2, fit_results.jld2, etc.) for data generation.
 ```julia
@@ -40,6 +49,7 @@ generate_encoding_files(
 )
 ```
 ### Generating JSON files for the website
+The following command automatically pulls the latest reference data from the `WormWideWeb-data` repo and downloads files from respective repositories. Then it loads the data and, if present, encoding data and neuropal label. Finally, the function generates the json files for the web.
 ```julia
 generate_all_paper_json(
     "/www-data/data/",
