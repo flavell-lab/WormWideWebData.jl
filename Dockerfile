@@ -1,4 +1,4 @@
-FROM julia:1.11-bookworm
+FROM julia:1.12-bookworm
 
 ENV JULIA_PROJECT=/app \
     JULIA_DEPOT_PATH=/usr/local/julia-depot \
@@ -16,12 +16,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 # Cache dependency resolution first for faster rebuilds.
-COPY Project.toml Manifest.toml ./
+COPY Project.toml ./
 RUN julia --project=/app -e 'using Pkg; Pkg.instantiate()'
 
 COPY src ./src
 COPY scripts/wwd_cli.jl ./scripts/wwd_cli.jl
-COPY README.md ./README.md
 RUN julia --project=/app -e 'using Pkg; Pkg.precompile()'
 
 RUN useradd --create-home --uid 10001 appuser \
