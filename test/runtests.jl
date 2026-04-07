@@ -285,6 +285,45 @@ end
                     f_checksum = path -> read(path, String),
                 )
             end
+
+            with_local_http_server(req -> HTTP.Response(200, "default-mode")) do base_url
+                path_save = joinpath(tmp, "default-mode.bin")
+                checksum_path_seen = Ref("")
+                withenv("WORMWIDEWEBDATA_DOWNLOAD_VIA_TMP" => nothing) do
+                    WormWideWebData.download_file(
+                        "$base_url/default-mode",
+                        path_save;
+                        verbose = false,
+                        checksum = "default-mode",
+                        f_checksum = path -> begin
+                            checksum_path_seen[] = path
+                            read(path, String)
+                        end,
+                    )
+                end
+                @test read(path_save, String) == "default-mode"
+                @test checksum_path_seen[] == path_save
+            end
+
+            with_local_http_server(req -> HTTP.Response(200, "tmp-mode")) do base_url
+                path_save = joinpath(tmp, "tmp-mode.bin")
+                checksum_path_seen = Ref("")
+                withenv("WORMWIDEWEBDATA_DOWNLOAD_VIA_TMP" => "true") do
+                    WormWideWebData.download_file(
+                        "$base_url/tmp-mode",
+                        path_save;
+                        verbose = false,
+                        checksum = "tmp-mode",
+                        f_checksum = path -> begin
+                            checksum_path_seen[] = path
+                            read(path, String)
+                        end,
+                    )
+                end
+                @test read(path_save, String) == "tmp-mode"
+                @test startswith(checksum_path_seen[], "/tmp/")
+                @test !isfile(checksum_path_seen[])
+            end
         end
     end
 

@@ -1,4 +1,10 @@
 const PROGRESS_INDICATOR_DT_SECOND = 5
+const DOWNLOAD_TO_TMP_ENV_VAR = "WORMWIDEWEBDATA_DOWNLOAD_VIA_TMP"
+
+function _env_var_is_true(name::AbstractString)
+    value = lowercase(strip(get(ENV, name, "")))
+    return value in ("1", "true", "t", "yes", "y", "on")
+end
 
 """
     save_dict_to_h5(path_h5, dict; metadata=nothing)
@@ -131,7 +137,9 @@ end
 
 Download a file to `path_save`. If `checksum` is provided, verify it with
 `f_checksum` and throw an error on mismatch. Existing files are reused when
-the checksum already matches.
+the checksum already matches. If `ENV["WORMWIDEWEBDATA_DOWNLOAD_VIA_TMP"]`
+is set to a truthy value (`"1"`, `"true"`, `"yes"`, ...), download to `/tmp`
+first and then move the file to `path_save`.
 """
 function download_file(
     url_download::AbstractString,
@@ -148,32 +156,46 @@ function download_file(
         return
     end
 
-    if verbose
-        p = Progress(100; dt = PROGRESS_INDICATOR_DT_SECOND, desc = "Downloading: ", barglyphs = BarGlyphs("[=> ]"))
+    use_tmp_staging = _env_var_is_true(DOWNLOAD_TO_TMP_ENV_VAR)
+    path_download = use_tmp_staging ? tempname("/tmp") : path_save
 
-        function _progress(total, downloaded)
-            if total > 0
-                percentage = Int(round(100 * downloaded / total))
-                update!(p, min(percentage, 99))
+    try
+        if verbose
+            p = Progress(
+                100;
+                dt = PROGRESS_INDICATOR_DT_SECOND,
+                desc = "Downloading: ",
+                barglyphs = BarGlyphs("[=> ]"),
+            )
+
+            function _progress(total, downloaded)
+                if total > 0
+                    percentage = Int(round(100 * downloaded / total))
+                    update!(p, min(percentage, 99))
+                end
             end
+
+            Downloads.download(url_download, path_download, progress = _progress, headers = headers)
+            update!(p, 100)
+            finish!(p)
+        else
+            Downloads.download(url_download, path_download, headers = headers)
         end
 
-        Downloads.download(url_download, path_save, progress = _progress, headers = headers)
-        update!(p, 100)
-        finish!(p)
-    else
-        Downloads.download(url_download, path_save, headers = headers)
+        if !isnothing(checksum) && f_checksum(path_download) != checksum
+            error("file downloaded but checksum is incorrect")
+        end
+
+        if use_tmp_staging
+            mv(path_download, path_save; force = true)
+        end
+    finally
+        if use_tmp_staging && isfile(path_download)
+            rm(path_download; force = true)
+        end
     end
 
-    if isnothing(checksum)
-        return
-    end
-
-    if f_checksum(path_save) == checksum
-        return
-    end
-
-    error("file downloaded but checksum is incorrect")
+    return
 end
 
 
