@@ -1,0 +1,8 @@
+.git
+.github
+test
+tmp
+*.log
+*.tar
+*.tar.bz2
+*.bz2

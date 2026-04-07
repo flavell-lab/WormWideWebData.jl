@@ -53,6 +53,108 @@ generate_all_paper_json(
 )
 ```
 
+## Docker + Cloud Run
+This repository includes:
+- `Dockerfile` for a reproducible Julia runtime.
+- `scripts/wwd_cli.jl` CLI wrapper for all JSON-generation features.
+
+### Build the image
+```bash
+docker build -t wormwidewebdata:latest .
+```
+
+### CLI help
+```bash
+docker run --rm wormwidewebdata:latest --help
+```
+
+### 1) Generate all paper JSON files
+This runs metadata sync + dataset download + JSON generation:
+```bash
+docker run --rm \
+  -v "$PWD/output:/output" \
+  -v "$PWD/workspace:/workspace" \
+  wormwidewebdata:latest \
+  all-json /output /workspace
+```
+
+### 2) Generate encoding JSON/HDF5 files
+```bash
+docker run --rm \
+  -v "$PWD/workspace:/workspace" \
+  wormwidewebdata:latest \
+  encoding-files \
+  /workspace/kfc_encoding_h5 \
+  /workspace/analysis_dict.jld2 \
+  /workspace/fit_results.jld2 \
+  /workspace/relative_encoding_strength.jld2
+```
+
+### 3) Generate Neuropal label JSON
+```bash
+docker run --rm \
+  -v "$PWD/workspace:/workspace" \
+  wormwidewebdata:latest \
+  neuropal-json \
+  /workspace \
+  /workspace/dict_neuropal_label.jld2 \
+  --overwrite
+```
+
+### 4) Generate per-paper dataset JSON files
+Prepare a datasets manifest JSON (`/workspace/datasets.json`) as an array of dataset objects or `{"datasets": [...]}`.
+```bash
+docker run --rm \
+  -v "$PWD/output:/output" \
+  -v "$PWD/workspace:/workspace" \
+  wormwidewebdata:latest \
+  paper-json \
+  /output \
+  /workspace/atanas_kim_2023 \
+  atanas_kim_2023 \
+  /workspace/datasets.json \
+  --encoding-data \
+  --neuropal-label
+```
+
+### Cloud Run recommendation
+Use **Cloud Run Jobs** for batch generation (instead of Cloud Run Services), because generation tasks are finite jobs and do not expose an HTTP server.
+
+Example job creation:
+```bash
+gcloud run jobs create wormwideweb-generate-all \
+  --image us-central1-docker.pkg.dev/PROJECT_ID/REPO/wormwidewebdata:latest \
+  --region us-central1 \
+  --args all-json,/output,/workspace \
+  --task-timeout 3600s \
+  --max-retries 2
+```
+
+Run the job:
+```bash
+gcloud run jobs execute wormwideweb-generate-all --region us-central1
+```
+
+Switch the same job to another feature by updating `--args`:
+```bash
+# encoding-files
+gcloud run jobs update wormwideweb-generate-all \
+  --region us-central1 \
+  --args encoding-files,/workspace/kfc_encoding_h5,/workspace/analysis_dict.jld2,/workspace/fit_results.jld2,/workspace/relative_encoding_strength.jld2
+
+# neuropal-json
+gcloud run jobs update wormwideweb-generate-all \
+  --region us-central1 \
+  --args neuropal-json,/workspace,/workspace/dict_neuropal_label.jld2,--overwrite
+
+# paper-json
+gcloud run jobs update wormwideweb-generate-all \
+  --region us-central1 \
+  --args paper-json,/output,/workspace/atanas_kim_2023,atanas_kim_2023,/workspace/datasets.json,--encoding-data,--neuropal-label
+```
+
+Set `WWW_REFERENCE_REPO_URL` if you need to override the default metadata source repository URL.
+
 ## Generated JSON files
 ### metadata
 Each file should contain a metadata entry:
@@ -93,7 +195,8 @@ Some workflows rely on external command-line tools:
 
 - `git` (reference repository sync),
 - `tar` and `bunzip2` (archive extraction),
-- `shasum` and `md5sum` (checksums),
+- `shasum` or `sha256sum` (SHA-256 checksums),
+- `md5sum` or `md5` (MD5 checksums),
 - `b3sum` (BLAKE3 checksum for some preprocessing paths).
 
 Install these tools and ensure they are available in `PATH` for full functionality.
