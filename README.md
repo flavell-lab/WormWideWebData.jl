@@ -153,8 +153,6 @@ gcloud run jobs update wormwideweb-generate-all \
   --args paper-json,/output,/workspace/atanas_kim_2023,atanas_kim_2023,/workspace/datasets.json,--encoding-data,--neuropal-label
 ```
 
-Set `WWW_REFERENCE_REPO_URL` if you need to override the default metadata source repository URL.
-
 ## Generated JSON files
 ### metadata
 Each file should contain a metadata entry:
