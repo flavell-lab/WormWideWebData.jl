@@ -1,4 +1,4 @@
-REFERENCE_REPO_URL = "git@github.com:flavell-lab/WormWideWeb-data.git"
+REFERENCE_REPO_URL = "https://github.com/flavell-lab/WormWideWeb-data.git"
 REFERENCE_ACTIVITY_PATH = "activity"
 REFERENCE_SCRATCH_DIR = get_scratch!("wormwideweb-data")
 
