@@ -3,6 +3,7 @@ FROM julia:1.12-bookworm
 ENV JULIA_PROJECT=/app \
     JULIA_DEPOT_PATH=/usr/local/julia-depot \
     JULIA_NUM_THREADS=auto \
+    JULIA_CPU_TARGET=generic \
     JULIA_PKG_PRECOMPILE_AUTO=0
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
