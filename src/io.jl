@@ -190,8 +190,8 @@ function download_file(
             mv(path_download, path_save; force = true)
         end
     finally
-        if use_tmp_staging && isfile(path_download)
-            rm(path_download; force = true)
+        if use_tmp_staging && ispath(path_download)
+            rm(path_download; force = true, recursive = true)
         end
     end
 
