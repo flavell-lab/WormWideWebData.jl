@@ -208,7 +208,14 @@ end
 
 Return the SHA-256 checksum of `path_file` as a lowercase hex string.
 """
-sha256(path_file::AbstractString) = split(read(`shasum -a 256 $(path_file)`, String))[1]
+function sha256(path_file::AbstractString)
+    cmd =
+        !isnothing(Sys.which("shasum")) ? `shasum -a 256 $(path_file)` :
+        !isnothing(Sys.which("sha256sum")) ? `sha256sum $(path_file)` : nothing
+
+    isnothing(cmd) && error("missing checksum tool: install `shasum` or `sha256sum`")
+    return split(read(cmd, String))[1]
+end
 
 """
     blake3(path_file)
@@ -216,11 +223,21 @@ sha256(path_file::AbstractString) = split(read(`shasum -a 256 $(path_file)`, Str
 Return the BLAKE3 checksum of `path_file` as a lowercase hex string.
 Requires `b3sum` to be available in `PATH`.
 """
-blake3(path_file::AbstractString) = split(read(`b3sum $(path_file)`, String))[1]
+function blake3(path_file::AbstractString)
+    isnothing(Sys.which("b3sum")) && error("missing checksum tool: install `b3sum`")
+    return split(read(`b3sum $(path_file)`, String))[1]
+end
 
 """
     md5sum(path_file)
 
 Return the MD5 checksum of `path_file` as a lowercase hex string.
 """
-md5sum(path_file::AbstractString) = split(read(`md5sum $(path_file)`, String))[1]
+function md5sum(path_file::AbstractString)
+    cmd =
+        !isnothing(Sys.which("md5sum")) ? `md5sum $(path_file)` :
+        !isnothing(Sys.which("md5")) ? `md5 -q $(path_file)` : nothing
+
+    isnothing(cmd) && error("missing checksum tool: install `md5sum` or `md5`")
+    return split(read(cmd, String))[1]
+end
