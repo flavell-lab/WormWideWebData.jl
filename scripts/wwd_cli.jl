@@ -8,13 +8,15 @@ function _usage(io::IO = stdout)
         io,
         """
 Usage:
-  wwd_cli.jl all-json <output_dir> <source_dir>
+  wwd_cli.jl all-json <output_dir> <source_dir> [--tmp-root DIR]
+  wwd_cli.jl all-json <output_dir> <source_dir> [tmp_root_dir]
   wwd_cli.jl encoding-files <target_dir> <analysis_dict.jld2> <fit_results.jld2> <relative_encoding_strength.jld2>
   wwd_cli.jl neuropal-json <target_dir> <neuropal_dict.jld2> [--json-name NAME] [--key-dataset KEY] [--key-sub KEY] [--overwrite]
   wwd_cli.jl paper-json <output_dir> <paper_dir> <paper_id> <datasets.json> [--neuropal-label] [--encoding-data] [--dir-datasets NAME]
 
 Examples:
   wwd_cli.jl all-json /output /workspace
+  wwd_cli.jl all-json /output /workspace --tmp-root /tmp/wwd-run
   wwd_cli.jl encoding-files /workspace/kfc_encoding_h5 /workspace/analysis_dict.jld2 /workspace/fit_results.jld2 /workspace/relative_encoding_strength.jld2
   wwd_cli.jl neuropal-json /workspace /workspace/dict_neuropal_label.jld2 --overwrite
   wwd_cli.jl paper-json /output /workspace/atanas_kim_2023 atanas_kim_2023 /workspace/datasets.json --encoding-data --neuropal-label
@@ -67,10 +69,26 @@ function main(args::Vector{String} = copy(ARGS))
 
     try
         if cmd == "all-json"
-            length(args) == 2 || return _fail("all-json requires <output_dir> <source_dir>")
-            output_dir = args[1]
-            source_dir = args[2]
-            WormWideWebData.generate_all_paper_json(output_dir, source_dir)
+            length(args) >= 2 ||
+                return _fail("all-json requires <output_dir> <source_dir> [--tmp-root DIR]")
+            output_dir = popfirst!(args)
+            source_dir = popfirst!(args)
+
+            tmp_root_dir = nothing
+            while !isempty(args)
+                arg = popfirst!(args)
+                if arg == "--tmp-root"
+                    tmp_root_dir = _take_value!(args, "--tmp-root")
+                elseif startswith(arg, "--")
+                    return _fail("unknown option for all-json: $arg")
+                elseif isnothing(tmp_root_dir)
+                    tmp_root_dir = arg
+                else
+                    return _fail("too many arguments for all-json")
+                end
+            end
+
+            WormWideWebData.generate_all_paper_json(output_dir, source_dir, tmp_root_dir)
             return 0
         end
 
