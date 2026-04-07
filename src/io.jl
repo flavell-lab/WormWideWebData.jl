@@ -1,3 +1,5 @@
+const PROGRESS_INDICATOR_DT_SECOND = 5
+
 """
     save_dict_to_h5(path_h5, dict; metadata=nothing)
 
@@ -147,7 +149,7 @@ function download_file(
     end
 
     if verbose
-        p = Progress(100; dt = 0.2, desc = "Downloading: ", barglyphs = BarGlyphs("[=> ]"))
+        p = Progress(100; dt = PROGRESS_INDICATOR_DT_SECOND, desc = "Downloading: ", barglyphs = BarGlyphs("[=> ]"))
 
         function _progress(total, downloaded)
             if total > 0
