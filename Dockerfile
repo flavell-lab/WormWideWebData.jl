@@ -2,7 +2,8 @@ FROM julia:1.12-bookworm
 
 ENV JULIA_PROJECT=/app \
     JULIA_DEPOT_PATH=/usr/local/julia-depot \
-    JULIA_NUM_THREADS=auto
+    JULIA_NUM_THREADS=auto \
+    JULIA_PKG_PRECOMPILE_AUTO=0
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
@@ -21,7 +22,8 @@ RUN julia --project=/app -e 'using Pkg; Pkg.instantiate()'
 
 COPY src ./src
 COPY scripts/wwd_cli.jl ./scripts/wwd_cli.jl
-RUN julia --project=/app -e 'using Pkg; Pkg.precompile()'
+RUN julia --project=/app -e 'using Pkg; Pkg.precompile(); using WormWideWebData'
+RUN julia --project=/app --compiled-modules=existing --pkgimages=existing /app/scripts/wwd_cli.jl --help
 
 RUN useradd --create-home --uid 10001 appuser \
     && mkdir -p /workspace /output \
@@ -29,5 +31,5 @@ RUN useradd --create-home --uid 10001 appuser \
 
 USER appuser
 
-ENTRYPOINT ["julia", "--project=/app", "/app/scripts/wwd_cli.jl"]
+ENTRYPOINT ["julia", "--project=/app", "--compiled-modules=existing", "--pkgimages=existing", "/app/scripts/wwd_cli.jl"]
 CMD ["--help"]
