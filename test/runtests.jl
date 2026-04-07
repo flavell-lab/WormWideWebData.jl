@@ -69,7 +69,8 @@ end
         @test WormWideWebData.parse_event_str("stim=[1,2],rev=[3]") ==
               Dict("stim" => [1, 2], "rev" => [3])
         @test WormWideWebData.parse_event_str("stim=[ ],rev=[4]") == Dict("rev" => [4])
-        @test WormWideWebData.parse_event_str("no events here") == Dict{String,Vector{Int}}()
+        @test WormWideWebData.parse_event_str("no events here") ==
+              Dict{String,Vector{Int}}()
     end
 
     @testset "save/load dict helpers" begin

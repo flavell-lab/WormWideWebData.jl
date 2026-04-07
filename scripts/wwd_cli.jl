@@ -75,16 +75,16 @@ function main(args::Vector{String} = copy(ARGS))
         end
 
         if cmd == "encoding-files"
-            length(args) == 4 ||
-                return _fail(
-                    "encoding-files requires <target_dir> <analysis_dict.jld2> <fit_results.jld2> <relative_encoding_strength.jld2>",
-                )
+            length(args) == 4 || return _fail(
+                "encoding-files requires <target_dir> <analysis_dict.jld2> <fit_results.jld2> <relative_encoding_strength.jld2>",
+            )
             WormWideWebData.generate_encoding_files(args[1], args[2], args[3], args[4])
             return 0
         end
 
         if cmd == "neuropal-json"
-            length(args) >= 2 || return _fail("neuropal-json requires <target_dir> <neuropal_dict.jld2>")
+            length(args) >= 2 ||
+                return _fail("neuropal-json requires <target_dir> <neuropal_dict.jld2>")
             target_dir = popfirst!(args)
             path_neuropal = popfirst!(args)
 
@@ -121,10 +121,9 @@ function main(args::Vector{String} = copy(ARGS))
         end
 
         if cmd == "paper-json"
-            length(args) >= 4 ||
-                return _fail(
-                    "paper-json requires <output_dir> <paper_dir> <paper_id> <datasets.json>",
-                )
+            length(args) >= 4 || return _fail(
+                "paper-json requires <output_dir> <paper_dir> <paper_id> <datasets.json>",
+            )
             output_dir = popfirst!(args)
             paper_dir = popfirst!(args)
             paper_id = popfirst!(args)

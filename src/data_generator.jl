@@ -28,7 +28,7 @@ function parse_event_str(str::AbstractString)
         for idx_str in split(idx_values, ',')
             idx_clean = strip(idx_str)
             isempty(idx_clean) && continue
-            
+
             push!(get!(event_dict, event_name, Int[]), parse(Int, idx_clean))
         end
     end
@@ -89,13 +89,12 @@ function get_dataset_dict(
 
     # behavior
     out_["behavior"] = Dict{String,Any}(
-        b=>behavior[b] for
-        b in ["angular_velocity", "head_angle", "velocity"]
+        b=>behavior[b] for b in ["angular_velocity", "head_angle", "velocity"]
     )
     out_["behavior"]["head_angle"] .*= dv_correction
     out_["behavior"]["angular_velocity"] .*= dv_correction
     if haskey(behavior, "pumping")
-         out_["behavior"]["pumping"] = behavior["pumping"]
+        out_["behavior"]["pumping"] = behavior["pumping"]
     end
     out_["behavior"]["reversal_events"] = Array(behavior["reversal_events"]') # tranpose for json
 
