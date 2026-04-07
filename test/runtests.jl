@@ -243,6 +243,35 @@ end
         end
     end
 
+    @testset "tmp wrapper helpers" begin
+        mktempdir() do source
+            mktempdir() do target
+                mkpath(joinpath(source, "paper-a", "datasets"))
+                write(joinpath(source, "paper-a", "datasets", "data.tar.bz2"), "tar-bz2")
+                write(joinpath(source, "paper-a", "datasets", "meta.bz2"), "bz2")
+                write(joinpath(source, "paper-a", "datasets", "ignore.h5"), "h5")
+
+                WormWideWebData._copy_tree_filtered(
+                    source,
+                    target,
+                    WormWideWebData._is_bz2_archive,
+                )
+
+                @test isfile(joinpath(target, "paper-a", "datasets", "data.tar.bz2"))
+                @test isfile(joinpath(target, "paper-a", "datasets", "meta.bz2"))
+                @test !isfile(joinpath(target, "paper-a", "datasets", "ignore.h5"))
+            end
+        end
+
+        mktempdir() do tmp
+            @test_throws ErrorException WormWideWebData.generate_all_paper_json(
+                joinpath(tmp, "out"),
+                tmp,
+                tmp,
+            )
+        end
+    end
+
     @testset "download_file" begin
         mktempdir() do tmp
             with_local_http_server(

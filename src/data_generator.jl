@@ -226,7 +226,7 @@ end
 Fetch activity metadata and generate dataset JSON outputs for all supported
 papers in the reference catalog.
 """
-function generate_all_paper_json(
+function _generate_all_paper_json_impl(
     path_dir_root_output::AbstractString,
     path_dir_root_source::AbstractString,
 )
@@ -264,4 +264,74 @@ function generate_all_paper_json(
         elseif type_repo == "dryad"
         end
     end
+end
+
+function _is_bz2_archive(path::AbstractString)
+    return endswith(lowercase(path), ".bz2")
+end
+
+function _copy_tree_filtered(
+    path_dir_source::AbstractString,
+    path_dir_target::AbstractString,
+    predicate::Function,
+)
+    isdir(path_dir_source) || return
+
+    for (root, _, files) in walkdir(path_dir_source)
+        rel_root = relpath(root, path_dir_source)
+        path_dir_target_current =
+            rel_root == "." ? path_dir_target : joinpath(path_dir_target, rel_root)
+
+        for filename in files
+            path_source = joinpath(root, filename)
+            predicate(path_source) || continue
+            mkpath(path_dir_target_current)
+            cp(path_source, joinpath(path_dir_target_current, filename); force = true)
+        end
+    end
+
+    nothing
+end
+
+"""
+    generate_all_paper_json(path_dir_root_output, path_dir_root_source, path_dir_root_tmp=nothing)
+
+Fetch activity metadata and generate dataset JSON outputs for all supported
+papers in the reference catalog.
+
+If `path_dir_root_tmp` is provided, the function:
+1. copies only `.bz2`/`.tar.bz2` files from `path_dir_root_source` to `path_dir_root_tmp`,
+2. runs generation in `path_dir_root_tmp` with output rooted at
+   `joinpath(path_dir_root_tmp, "output")`,
+3. on success, copies `.bz2`/`.tar.bz2` files back to `path_dir_root_source`,
+4. copies generated outputs from `output` to `path_dir_root_output`.
+"""
+function generate_all_paper_json(
+    path_dir_root_output::AbstractString,
+    path_dir_root_source::AbstractString,
+    path_dir_root_tmp::Union{AbstractString,Nothing} = nothing,
+)
+    if isnothing(path_dir_root_tmp)
+        _generate_all_paper_json_impl(path_dir_root_output, path_dir_root_source)
+        return
+    end
+
+    path_dir_root_source_abs = abspath(path_dir_root_source)
+    path_dir_root_tmp_abs = abspath(path_dir_root_tmp)
+    path_dir_root_output_tmp = joinpath(path_dir_root_tmp_abs, "output")
+
+    if path_dir_root_source_abs == path_dir_root_tmp_abs
+        error("path_dir_root_tmp must be different from path_dir_root_source")
+    end
+
+    mkpath(path_dir_root_tmp_abs)
+    _copy_tree_filtered(path_dir_root_source_abs, path_dir_root_tmp_abs, _is_bz2_archive)
+
+    rm(path_dir_root_output_tmp; force = true, recursive = true)
+    _generate_all_paper_json_impl(path_dir_root_output_tmp, path_dir_root_tmp_abs)
+
+    _copy_tree_filtered(path_dir_root_tmp_abs, path_dir_root_source_abs, _is_bz2_archive)
+    _copy_tree_filtered(path_dir_root_output_tmp, path_dir_root_output, _ -> true)
+
+    return
 end
