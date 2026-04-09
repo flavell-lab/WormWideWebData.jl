@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     ca-certificates \
     bzip2 \
+    pbzip2 \
     coreutils \
     perl \
     b3sum \
