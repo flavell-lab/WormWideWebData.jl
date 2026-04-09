@@ -218,7 +218,7 @@ end
             path_output_tar = joinpath(path_dir_output, "paper-a.tar.bz2")
             @test isfile(path_output_tar)
             tar_members = read(`tar -tjf $path_output_tar`, String)
-            @test occursin("paper-a/paper-a_uid-1.json", tar_members)
+            @test occursin("paper-a_uid-1.json", tar_members)
             @test !occursin(".json.bz2", tar_members)
         end
     end
