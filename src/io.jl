@@ -213,13 +213,13 @@ function unarchive(
     verbose && @info "unarchiving $path_archive"
     if endswith(path_archive, ".tar.bz2")
         if isnothing(path_target)
-            run(`tar -xjf $path_archive`)
+            run(pipeline(`pbzip2 -dc $path_archive`, `tar -xf -`))
         else
             mkpath(path_target)
-            run(`tar -xjf $path_archive -C $path_target`)
+            run(pipeline(`pbzip2 -dc $path_archive`, `tar -xf - -C $path_target`))
         end
     elseif endswith(path_archive, ".bz2")
-        run(`bunzip2 -kf $path_archive`)
+        run(`pbzip2 -dkf $path_archive`)
     else
         error("unsupported archive type")
     end
