@@ -23,6 +23,11 @@ jobs:
 
       - uses: julia-actions/cache@v2
 
+      - name: Install pbzip2
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pbzip2
+
       - name: Instantiate
         run: julia --project=. -e 'using Pkg; Pkg.instantiate()'
 
