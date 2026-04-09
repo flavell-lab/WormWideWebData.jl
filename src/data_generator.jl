@@ -113,7 +113,9 @@ end
     generate_paper_datasets_json(path_dir_output, path_dir_paper, paper_id, datasets; neuropal_label=false, encoding_data=false, dir_datasets="datasets")
 
 Generate one JSON file per dataset entry for a paper after validating source
-HDF5 files and optionally attaching encoding/label metadata.
+HDF5 files and optionally attaching encoding/label metadata. After generation,
+also create a per-paper `{paper_id}.tar.bz2` archive one directory above the
+JSON files.
 """
 function generate_paper_datasets_json(
     path_dir_output::AbstractString,
@@ -217,6 +219,14 @@ function generate_paper_datasets_json(
         open(path_json, "w") do f
             JSON.print(f, dict_output)
         end
+        run(`pbzip2 -kf $path_json`)
+    end
+
+    # archive this paper's JSON outputs one level above `path_dir_json`
+    archive_rel = "../$(paper_id).tar.bz2"
+    cmd = "tar -cf - *.json | pbzip2 -c > " * Base.shell_escape(archive_rel)
+    cd(path_dir_json) do
+        run(`sh -c $cmd`)
     end
 end
 

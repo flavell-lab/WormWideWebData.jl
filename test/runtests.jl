@@ -186,6 +186,40 @@ end
                 bad_datasets,
                 tmp,
             )
+
+            path_dir_paper = joinpath(tmp, "paper-a")
+            path_dir_datasets = joinpath(path_dir_paper, "datasets")
+            mkpath(path_dir_datasets)
+
+            path_h5_dataset = write_core_fixture_h5(joinpath(path_dir_datasets, "dataset.h5"))
+            path_dir_output = joinpath(tmp, "output")
+            paper_datasets = [
+                Dict(
+                    "uid" => "uid-1",
+                    "filename" => "dataset.h5",
+                    "checksum" => WormWideWebData.sha256(path_h5_dataset),
+                    "θh_pos_is_ventral" => true,
+                    "type" => "calcium,behavior",
+                    "event" => "stim=[1],rev=[]",
+                ),
+            ]
+
+            WormWideWebData.generate_paper_datasets_json(
+                path_dir_output,
+                path_dir_paper,
+                "paper-a",
+                paper_datasets,
+            )
+
+            path_output_json = joinpath(path_dir_output, "paper-a", "paper-a_uid-1.json")
+            @test isfile(path_output_json)
+            @test isfile(path_output_json * ".bz2")
+
+            path_output_tar = joinpath(path_dir_output, "paper-a.tar.bz2")
+            @test isfile(path_output_tar)
+            tar_members = read(`tar -tjf $path_output_tar`, String)
+            @test occursin("paper-a/paper-a_uid-1.json", tar_members)
+            @test !occursin(".json.bz2", tar_members)
         end
     end
 
