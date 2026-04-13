@@ -8,6 +8,11 @@
 - validate HDF5 dataset integrity,
 - transform source files into normalized JSON/HDF5 outputs.
 
+Input data to the package:
+- datasets: datasets were acquired and processed using the [ANTSUN]([url](https://github.com/flavell-lab/AtanasKim-Cell2023)) pipeline
+- analysis results (if encoding info is available): [CePNEMAnalysis.jl](https://github.com/flavell-lab/CePNEMAnalysis.jl)
+- NeuroPAL labels (if identity/labeling info is available): [NeuroPALData.jl](https://github.com/flavell-lab/NeuroPALData.jl) 
+
 ## Installation
 
 From Julia:
