@@ -6,6 +6,7 @@
 - sync paper metadata from the WormWideWeb reference repository,
 - download dataset bundles from Zenodo/Dryad,
 - validate HDF5 dataset integrity,
+- package processed HDF5 datasets with checksum manifests,
 - transform source files into normalized JSON/HDF5 outputs.
 
 Input data to the package:
@@ -56,6 +57,37 @@ generate_all_paper_json(
     "/www-data/data/",
     "/www-data/"
 )
+```
+
+### Validating and packaging processed HDF5 files
+Use `check_h5_datasets_for_paper_json` to validate every direct `.h5` file in a
+directory against the integrity checks required before paper JSON generation.
+
+```julia
+using WormWideWebData
+
+path_dir_datasets = "/www-data/atanas_kim_2023/datasets"
+
+check_h5_datasets_for_paper_json(path_dir_datasets)
+```
+
+Use `package_h5_datasets` to run the same validation, write
+`h5_sha256.csv`, and create a flat `tar.bz2` archive containing only the `.h5`
+files plus the checksum CSV. The default archive name is
+`processed_h5.tar.bz2`; a relative archive name is saved inside the dataset
+directory.
+
+```julia
+package_h5_datasets(path_dir_datasets)
+package_h5_datasets(path_dir_datasets, "custom_h5_bundle.tar.bz2")
+```
+
+After extraction, the archive members are at the top level:
+
+```text
+dataset_a.h5
+dataset_b.h5
+h5_sha256.csv
 ```
 
 ## Docker + Cloud Run
@@ -197,7 +229,7 @@ julia --project -e 'using Pkg; Pkg.test(coverage=true)'
 Some workflows rely on external command-line tools:
 
 - `git` (reference repository sync),
-- `tar` and `bunzip2` (archive extraction),
+- `tar` and `pbzip2` (archive extraction and compression),
 - `shasum` or `sha256sum` (SHA-256 checksums),
 - `md5sum` or `md5` (MD5 checksums),
 - `b3sum` (BLAKE3 checksum for some preprocessing paths).
