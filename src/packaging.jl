@@ -8,7 +8,7 @@ with `pbzip2`. Relative `archive_name` values are saved under `path_dir`.
 function package_h5_datasets(
     path_dir::AbstractString,
     archive_name::AbstractString = "processed_h5.tar.bz2";
-    verbose::Bool = false,
+    verbose::Bool = true,
 )
     check_h5_datasets_for_paper_json(path_dir; verbose = verbose)
 
