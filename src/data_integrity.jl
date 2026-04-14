@@ -24,9 +24,9 @@ end
 """
     check_h5_data_integrity(path_h5; check_velocity_cor=false, check_velocity_cor_threshold=0.3, check_velocity_cor_count=10)
 
-Validate expected structure and normalization properties of a dataset HDF5 file.
-Optional velocity-correlation checks can enforce a minimum number of correlated
-neurons.
+Validate expected structure and normalization properties of a dataset HDF5 file,
+including the fields required by the paper JSON generator. Optional
+velocity-correlation checks can enforce a minimum number of correlated neurons.
 """
 function check_h5_data_integrity(
     path_h5::AbstractString;
@@ -37,12 +37,15 @@ function check_h5_data_integrity(
     fname = basename(path_h5)
     error_msg(m) = "$fname: $m"
 
+    timing = h5read(path_h5, "timing")
     gcamp = h5read(path_h5, "gcamp")
     behavior = h5read(path_h5, "behavior")
 
     #### checking data ####
 
     ## traces ##
+    @assert haskey(gcamp, "trace_array") error_msg("missing gcamp trace_array")
+    @assert ndims(gcamp["trace_array"]) == 2 error_msg("gcamp trace_array must be a matrix")
     n_neuron, n_t = size(gcamp["trace_array"])
     keys_trace = filter(x->startswith(x, "trace"), keys(gcamp))
 
@@ -63,10 +66,28 @@ function check_h5_data_integrity(
         )
     end
 
+    ## timing ##
+    @assert haskey(timing, "timestamp_confocal") error_msg(
+        "missing timing timestamp_confocal",
+    )
+    @assert length(timing["timestamp_confocal"]) == n_t error_msg(
+        "length(timing/timestamp_confocal)=$(length(timing["timestamp_confocal"])) does not match n_t=$n_t",
+    )
+    @assert length(timing["timestamp_confocal"]) >= 2 error_msg(
+        "timing/timestamp_confocal must have at least 2 samples",
+    )
+
     ## behavior ##
-    for k in ["velocity", "head_angle"] # some datasets do not have pumping
+    for k in ["angular_velocity", "velocity", "head_angle"] # some datasets do not have pumping
         @assert haskey(behavior, k) error_msg("missing behavior $k")
+        @assert length(behavior[k]) == n_t error_msg(
+            "length(behavior/$k)=$(length(behavior[k])) does not match n_t=$n_t",
+        )
     end
+    @assert haskey(behavior, "reversal_events") error_msg("missing behavior reversal_events")
+    @assert ndims(behavior["reversal_events"]) in (1, 2) error_msg(
+        "behavior/reversal_events must be a vector or matrix",
+    )
 
     if check_velocity_cor
         threshold = check_velocity_cor_threshold
@@ -79,6 +100,40 @@ function check_h5_data_integrity(
         @assert n_cor_v >= min_v_neuron error_msg(
             "expected but did not get at least $min_v_neuron neurons with cor to velocity above $threshold. count=$n_cor_v",
         )
+    end
+
+    nothing
+end
+
+function _h5_dataset_filenames(path_dir::AbstractString)
+    @assert isdir(path_dir) "not a directory: $path_dir"
+
+    files = filter(readdir(path_dir)) do filename
+        path = joinpath(path_dir, filename)
+        isfile(path) && endswith(lowercase(filename), ".h5")
+    end
+    sort!(files)
+
+    return files
+end
+
+"""
+    check_h5_datasets_for_paper_json(path_dir; verbose=false)
+
+Validate every direct `.h5` file in `path_dir` for the paper JSON generator.
+This reuses `check_h5_data_integrity`, which includes the fields required by
+`get_dataset_dict`.
+"""
+function check_h5_datasets_for_paper_json(
+    path_dir::AbstractString;
+    verbose::Bool = false,
+)
+    files = _h5_dataset_filenames(path_dir)
+    @assert !isempty(files) "no .h5 files found in $path_dir"
+
+    for filename in files
+        verbose && @info "Checking dataset $filename"
+        check_h5_data_integrity(joinpath(path_dir, filename))
     end
 
     nothing
@@ -129,8 +184,7 @@ function get_file_checksums(
 
     data = []
     for file in files
-        path_f = joinpath(path_dir, file)
-        hash = f_checksum(path_f)
+        hash = f_checksum(file)
 
         push!(data, (filename = basename(file), checksum = hash))
     end
