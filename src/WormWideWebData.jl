@@ -21,6 +21,7 @@ include("io.jl")
 include("label.jl")
 include("encoding.jl")
 include("data_integrity.jl")
+include("packaging.jl")
 include("reference.jl")
 include("api/api.jl")
 include("data_generator.jl")
@@ -30,7 +31,9 @@ export generate_encoding_files, get_encoding_dictionary
 # label.jl
 export generate_neuropal_json
 # data_integrity.jl
-export check_h5_data_integrity
+export check_h5_data_integrity, check_h5_datasets_for_paper_json
+# packaging.jl
+export package_h5_datasets
 # reference.jl
 export get_activity_info
 # io.jl
