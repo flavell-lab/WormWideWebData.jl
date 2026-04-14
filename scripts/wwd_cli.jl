@@ -11,7 +11,7 @@ Usage:
   wwd_cli.jl all-json <output_dir> <source_dir> [--tmp-root DIR]
   wwd_cli.jl all-json <output_dir> <source_dir> [tmp_root_dir]
   wwd_cli.jl encoding-files <target_dir> <analysis_dict.jld2> <fit_results.jld2> <relative_encoding_strength.jld2>
-  wwd_cli.jl neuropal-json <target_dir> <neuropal_dict.jld2> [--json-name NAME] [--key-dataset KEY] [--key-sub KEY] [--overwrite]
+  wwd_cli.jl neuropal-json <target_dir> <neuropal_dict.jld2> [--json-name NAME] [--key-dataset KEY] [--key-sub KEY] [--overwrite] [--no-compress]
   wwd_cli.jl paper-json <output_dir> <paper_dir> <paper_id> <datasets.json> [--neuropal-label] [--encoding-data] [--dir-datasets NAME]
 
 Examples:
@@ -110,11 +110,14 @@ function main(args::Vector{String} = copy(ARGS))
             key_dataset = "dict_neuropal_label"
             key_sub = nothing
             overwrite = false
+            compress = true
 
             while !isempty(args)
                 arg = popfirst!(args)
                 if arg == "--overwrite"
                     overwrite = true
+                elseif arg == "--no-compress"
+                    compress = false
                 elseif arg == "--json-name"
                     json_name = _take_value!(args, "--json-name")
                 elseif arg == "--key-dataset"
@@ -134,6 +137,7 @@ function main(args::Vector{String} = copy(ARGS))
                 key_dataset = key_dataset,
                 key_sub = key_sub,
                 overwrite = overwrite,
+                compress = compress,
             )
             return 0
         end

@@ -524,6 +524,17 @@ end
                 parsed = JSON.parsefile(path_json, dicttype = Dict)
                 @test parsed["data"]["uid-1"]["idx_neuron-label"]["roi1"] == "AVA"
                 @test haskey(parsed["metadata"], "blake3_neuropal_dict")
+                @test isfile(path_json * ".bz2")
+
+                path_json_uncompressed = WormWideWebData.generate_neuropal_json(
+                    tmp,
+                    path_neuropal_dict,
+                    false;
+                    json_name = "neuropal-uncompressed.json",
+                    compress = false,
+                )
+                @test isfile(path_json_uncompressed)
+                @test !isfile(path_json_uncompressed * ".bz2")
 
                 @test_throws ErrorException WormWideWebData.generate_neuropal_json(
                     tmp,

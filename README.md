@@ -41,7 +41,8 @@ path_fit_results = ".../fit_results.jld2"
 path_relative_encoding_strength = ".../relative_encoding_strength.jld2"
 path_neuropal = ".../dict_neuropal_label.jld2"
 
-generate_neuropal_json(path_dir_target, path_neuropal)
+generate_neuropal_json(path_dir_target, path_neuropal) # also writes neuropal_label.json.bz2 by default
+# pass compress=false to skip the .bz2 copy
 
 generate_encoding_files(
     path_dir_target,
@@ -137,6 +138,7 @@ docker run --rm \
   /workspace/dict_neuropal_label.jld2 \
   --overwrite
 ```
+Add `--no-compress` to skip writing `neuropal_label.json.bz2`.
 
 ### 4) Generate per-paper dataset JSON files
 Prepare a datasets manifest JSON (`/workspace/datasets.json`) as an array of dataset objects or `{"datasets": [...]}`.

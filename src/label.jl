@@ -1,8 +1,9 @@
 """
-    generate_neuropal_json(path_dir_target, path_neuropal_dict, verbose=true; json_name="neuropal_label.json", key_dataset="dict_neuropal_label", key_sub=nothing, overwrite=false)
+    generate_neuropal_json(path_dir_target, path_neuropal_dict, verbose=true; json_name="neuropal_label.json", key_dataset="dict_neuropal_label", key_sub=nothing, overwrite=false, compress=true)
 
 Convert a Neuropal label dictionary stored in JLD2 into a normalized JSON file
-with checksum metadata.
+with checksum metadata. By default, also write a bzip2-compressed copy at
+`<json_name>.bz2`.
 """
 function generate_neuropal_json(
     path_dir_target::AbstractString,
@@ -12,10 +13,18 @@ function generate_neuropal_json(
     key_dataset::AbstractString = "dict_neuropal_label",
     key_sub::Union{AbstractString,Nothing} = nothing,
     overwrite::Bool = false,
+    compress::Bool = true,
 )
     path_save = joinpath(path_dir_target, json_name)
+    path_save_bz2 = path_save * ".bz2"
     if isfile(path_save) && !overwrite
         error("File already exists at $path_save")
+    end
+    if compress && isfile(path_save_bz2) && !overwrite
+        error("File already exists at $path_save_bz2")
+    end
+    if compress && isnothing(Sys.which("pbzip2"))
+        error("missing compression tool: install `pbzip2`")
     end
 
     blake_neuropal_dict = blake3(path_neuropal_dict)
@@ -35,6 +44,10 @@ function generate_neuropal_json(
     )
 
     verbose && @info "neuropal dict saving complete: $path_save"
+    if compress
+        run(`pbzip2 -kf $path_save`)
+        verbose && @info "neuropal dict compression complete: $path_save_bz2"
+    end
 
     return path_save
 end
