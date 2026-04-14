@@ -164,6 +164,25 @@ end
                 check_velocity_cor_threshold = 0.9,
                 check_velocity_cor_count = 2,
             )
+            @test isnothing(WormWideWebData.check_h5_datasets_for_paper_json(tmp))
+
+            path_bad_h5 = joinpath(tmp, "missing-angular-velocity.h5")
+            a = sqrt(0.5)
+            h5open(path_bad_h5, "w") do file
+                timing = create_group(file, "timing")
+                timing["timestamp_confocal"] = [0.0, 1.0]
+
+                behavior = create_group(file, "behavior")
+                behavior["head_angle"] = [0.5, -0.5]
+                behavior["velocity"] = [-1.0, 1.0]
+                behavior["reversal_events"] = [0, 1]
+
+                gcamp = create_group(file, "gcamp")
+                gcamp["trace_array"] = [-a a; a -a]
+            end
+            @test_throws AssertionError WormWideWebData.check_h5_data_integrity(
+                path_bad_h5,
+            )
 
             good_checksum = WormWideWebData.sha256(path_h5)
             datasets = [
@@ -192,12 +211,14 @@ end
             mkpath(path_dir_datasets)
 
             path_h5_dataset = write_core_fixture_h5(joinpath(path_dir_datasets, "dataset.h5"))
+            write(joinpath(path_dir_datasets, "ignore.txt"), "ignored")
             path_dir_output = joinpath(tmp, "output")
+            path_h5_dataset_checksum = WormWideWebData.sha256(path_h5_dataset)
             paper_datasets = [
                 Dict(
                     "uid" => "uid-1",
                     "filename" => "dataset.h5",
-                    "checksum" => WormWideWebData.sha256(path_h5_dataset),
+                    "checksum" => path_h5_dataset_checksum,
                     "θh_pos_is_ventral" => true,
                     "type" => "calcium,behavior",
                     "event" => "stim=[1],rev=[]",
@@ -220,6 +241,16 @@ end
             tar_members = read(`tar -tjf $path_output_tar`, String)
             @test occursin("paper-a_uid-1.json", tar_members)
             @test !occursin(".json.bz2", tar_members)
+
+            path_h5_package = WormWideWebData.package_h5_datasets(path_dir_datasets)
+            @test path_h5_package == joinpath(path_dir_datasets, "processed_h5.tar.bz2")
+            @test isfile(path_h5_package)
+            @test readlines(joinpath(path_dir_datasets, "h5_sha256.csv")) == [
+                "filename,sha256",
+                "dataset.h5,$path_h5_dataset_checksum",
+            ]
+            h5_package_members = split(read(`tar -tjf $path_h5_package`, String))
+            @test h5_package_members == ["dataset.h5", "h5_sha256.csv"]
         end
     end
 
